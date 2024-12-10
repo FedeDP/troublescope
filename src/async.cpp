@@ -77,6 +77,11 @@ static int fuse_readdir(const char *path,
 		if(ctx == NULL) {
 			return -EINVAL;
 		}
+		if(offset != 0) {
+			// Unsupported
+			return -EPERM;
+		}
+
 		std::unique_lock l(ctx->m_mu);
 		ctx->filler = filler;
 		ctx->buf = buf;
@@ -117,7 +122,13 @@ static int fuse_read(const char *path,
 		if(ctx == NULL) {
 			return -EINVAL;
 		}
+		if(offset != 0) {
+			// Unsupported
+			return -EPERM;
+		}
+
 		std::unique_lock l(ctx->m_mu);
+		memset(buf, 0, size);
 		ctx->buf = buf;
 		int pid = 0;
 		sscanf(path, "/%d", &pid);
@@ -128,7 +139,7 @@ static int fuse_read(const char *path,
 		ctx->m_cv.wait(l, [ctx] { return ctx->done; });
 	}
 
-	size = strlen(buf);
+	size = strlen(buf) + 1;
 	return size;
 }
 
