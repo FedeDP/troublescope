@@ -54,6 +54,31 @@ static int fuse_getattr(const char *path, struct stat *stbuf, struct fuse_file_i
 		return 0;
 	}
 	if(ret == 2) {
+		char f[32] = {};
+		int fd;
+		ret = sscanf(path, "/%d/fdinfo/%d/%31s", &pid, &fd, f);
+		if(ret == 2) {
+			// we matched /1000/fdinfo/<fd>
+			stbuf->st_mode = S_IFDIR | 0755;
+			stbuf->st_nlink = 0;  // TODO correct value
+			return 0;
+		}
+
+		if(ret == 3) {
+			// we matched /1000/fdinfo/<fd>/name
+			stbuf->st_mode = S_IFREG | 0444;
+			stbuf->st_nlink = 1;
+			stbuf->st_size = 1024;  // non-zero size
+			return 0;
+		}
+
+		if(strcmp(p, "fdinfo") == 0) {
+			// we matched /1000/fdinfo
+			stbuf->st_mode = S_IFDIR | 0755;
+			stbuf->st_nlink = 0;  // TODO correct value
+			return 0;
+		}
+
 		// we matched /1000/foo
 		if(strcmp(p, "cwd") == 0 || strcmp(p, "exe") == 0) {
 			stbuf->st_mode = S_IFLNK | 0444;
@@ -88,14 +113,26 @@ static int fuse_readdir(const char *path,
 		ctx->buf = buf;
 		ctx->done = false;
 		int pid = 0;
+		char b[32] = {};
 
 		if(strcmp(path, "/") == 0) {
 			generate_async_event(ctx->async_event_handler, ASYNC_EVENT_ROOT_NAME, pid, "root");
 		}
 
-		if(sscanf(path, "/%d", &pid) == 1) {
+		int ret = sscanf(path, "/%d/%31s", &pid, b);
+		if(ret == 1) {
 			generate_async_event(ctx->async_event_handler, ASYNC_EVENT_PID_NAME, pid, "pid");
 		}
+
+		if(ret == 2) {
+			char fd[32] = {};
+			if(sscanf(path, "/%d/fdinfo/%31s", &pid, fd) == 2) {
+				generate_async_event(ctx->async_event_handler, ASYNC_EVENT_FD_ROOT_NAME, pid, fd);
+			} else {
+				generate_async_event(ctx->async_event_handler, ASYNC_EVENT_ENTRY_NAME, pid, b);
+			}
+		}
+
 		ctx->m_cv.wait(l, [ctx] { return ctx->done; });
 	}
 	return 0;
