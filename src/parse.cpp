@@ -86,6 +86,10 @@ bool my_plugin::parse_async_event(const falcosecurity::parse_event_input &in) {
 			if(!strcmp(field, "cwd")) {
 				std::string cwd = "";
 				m_threads_field_cwd.read_value(tr, tinfo, cwd);
+				if(cwd.empty()) {
+					// If the cwd is empty, we set it to the root directory
+					cwd = "/";
+				}
 				memcpy(m_fuse_context.buf, cwd.c_str(), cwd.length() + 1);
 			}
 		} catch(...) {
