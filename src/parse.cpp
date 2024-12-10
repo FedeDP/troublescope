@@ -40,7 +40,6 @@ std::vector<falcosecurity::event_type> my_plugin::get_parse_event_types() {
 }
 
 bool my_plugin::parse_async_event(const falcosecurity::parse_event_input &in) {
-	printf("topkek2\n");
 	auto &evt = in.get_event_reader();
 	falcosecurity::events::asyncevent_e_decoder ad(evt);
 	bool is_root = std::strcmp(ad.get_name(), ASYNC_EVENT_ROOT_NAME) == 0;
