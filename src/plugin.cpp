@@ -107,27 +107,14 @@ bool my_plugin::init(falcosecurity::init_input &in) {
 		m_threads_field_tid =
 		        m_threads_table.get_field(t.fields(), TID_FIELD_NAME, st::SS_PLUGIN_ST_INT64);
 		m_threads_field_comm =
-		        m_threads_table.get_field(t.fields(), TID_FIELD_NAME, st::SS_PLUGIN_ST_STRING);
+		        m_threads_table.get_field(t.fields(), COMM_FIELD_NAME, st::SS_PLUGIN_ST_STRING);
 
 	} catch(falcosecurity::plugin_exception e) {
-		m_lasterr = std::string("Failed to get a field gtom the table: ") + e.what();
+		m_lasterr = std::string("Failed to get a field from the table: ") + e.what();
 		SPDLOG_CRITICAL(m_lasterr);
 		return false;
 	}
-	// Initialize metrics
-	falcosecurity::metric n_procs(METRIC_N_PROCS);
-	n_procs.set_value(0);
-	m_metrics.push_back(n_procs);
-
-	falcosecurity::metric n_missing(METRIC_N_MISSING);
-	n_missing.set_value(0);
-	m_metrics.push_back(n_missing);
-
 	return true;
-}
-
-const std::vector<falcosecurity::metric> &my_plugin::get_metrics() {
-	return m_metrics;
 }
 
 FALCOSECURITY_PLUGIN(my_plugin);

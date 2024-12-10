@@ -29,13 +29,6 @@ limitations under the License.
 #define ASYNC_EVENT_SOURCES {"syscall"}
 
 /////////////////////////
-// Extract capability
-/////////////////////////
-#define EXTRACT_EVENT_NAMES {""}
-
-#define EXTRACT_EVENT_SOURCES {"syscall"}
-
-/////////////////////////
 // Parse capability
 /////////////////////////
 #define PARSE_EVENT_CODES      \
@@ -48,7 +41,7 @@ limitations under the License.
 	 PPME_SYSCALL_EXECVE_18_X, \
 	 PPME_SYSCALL_EXECVE_19_X, \
 	 PPME_SYSCALL_EXECVEAT_X,  \
-	 PPME_SYSCALL_PROCEXIT_X,  \
+	 PPME_PROCEXIT_1_X,        \
 	 PPME_ASYNCEVENT_E}
 
 #define PARSE_EVENT_SOURCES {"syscall"}
@@ -66,12 +59,6 @@ limitations under the License.
 #define PTID_FIELD_NAME "ptid"
 #define TID_FIELD_NAME "tid"
 #define COMM_FIELD_NAME "comm"
-
-/////////////////////////
-// Metrics
-/////////////////////////
-#define METRIC_N_PROCS "n_procs"
-#define METRIC_N_MISSING "n_missing_procs"
 
 /////////////////////////
 // Generic plugin consts

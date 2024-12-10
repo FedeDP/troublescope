@@ -106,7 +106,7 @@ bool my_plugin::parse_event(const falcosecurity::parse_event_input &in) {
 	case PPME_SYSCALL_EXECVE_19_X:
 	case PPME_SYSCALL_EXECVEAT_X:
 		return parse_new_process_event(in);
-	case PPME_SYSCALL_PROCEXIT_X:
+	case PPME_PROCEXIT_1_X:
 		// TODO: remove pid?
 		return parse_new_process_event(in);
 	case PPME_ASYNCEVENT_E:

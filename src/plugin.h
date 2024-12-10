@@ -86,29 +86,14 @@ private:
 	struct fuse *m_fuse_handler;
 	struct fuse_args m_fuse_args;
 
-	std::vector<falcosecurity::metric> m_metrics;
-
 	PluginConfig m_cfg;
 
 	// Last error of the plugin
 	std::string m_lasterr;
 	// Accessor to the thread table
 	falcosecurity::table m_threads_table;
-	// Accessors to the thread table "pidns_init_start_ts" field
-	falcosecurity::table_field m_threads_field_pidns_init_start_ts;
-	// Accessors to the thread table "category" field
-	falcosecurity::table_field m_threads_field_category;
-	// Accessors to the thread table "vpid" field
-	falcosecurity::table_field m_threads_field_vpid;
-	// Accessors to the thread table "ptid" field
+	// Accessors to the thread table "tid" field
 	falcosecurity::table_field m_threads_field_tid;
+	// Accessors to the thread table "comm" field
 	falcosecurity::table_field m_threads_field_comm;
-
-	// Accessors to the thread table "cgroups" table
-	falcosecurity::table_field m_threads_field_cgroups;
-	// Accessors to the thread table "cgroups" "second" field, ie: the cgroups
-	// path
-	falcosecurity::table_field m_cgroups_field_second;
-	// Accessors to the thread table "container_id" foreign key field
-	falcosecurity::table_field m_container_id_field;
 };

@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <sys/eventfd.h>
 #include <sys/poll.h>
+#include <filesystem>
 
 #define POLL_FD_FUSE 0
 #define POLL_FD_EVENTFD 1
@@ -74,7 +75,7 @@ static int fuse_readdir(const char *path,
 		ctx->filler = filler;
 		ctx->buf = buf;
 		generate_async_event(ctx->async_event_handler, ASYNC_EVENT_ROOT_NAME);
-		ctx->m_cv.wait(l);
+		ctx->m_cv.wait(l);  // todo!: fix spurious notifications
 	}
 	return 0;
 }
@@ -144,16 +145,28 @@ exit:
 // We need this API to start the async thread when the
 // `set_async_event_handler` plugin API will be called.
 bool my_plugin::start_async_events(std::shared_ptr<falcosecurity::async_event_handler_factory> f) {
-	auto ret = mkdir(m_cfg.fs_root.c_str(), 0777);
-	if(ret < 0) {
-		SPDLOG_ERROR("mkdir failed: {}", errno);
+	std::filesystem::path directory = m_cfg.fs_root;
+	std::error_code ec;
+	auto exists = std::filesystem::exists(directory, ec);
+	if(ec.value() != 0) {
+		SPDLOG_ERROR("cannot check if directory exists: {}. err: {}",
+		             directory.string(),
+		             ec.message());
 		return false;
 	}
 
+	if(!exists) {
+		if(!std::filesystem::create_directory(directory, ec)) {
+			SPDLOG_ERROR("cannot create directory: {}. err: {}", directory.string(), ec.message());
+			return false;
+		}
+	}
+
+	SPDLOG_INFO("FUSE filesystem at {}", directory.string());
 	fuse_opt_add_arg(&m_fuse_args, PLUGIN_NAME);
 	m_fuse_context.async_event_handler = f->new_handler();
 	m_fuse_handler = fuse_new(&m_fuse_args, &ops, sizeof(ops), &m_fuse_context);
-	ret = fuse_mount(m_fuse_handler, m_cfg.fs_root.c_str());
+	int ret = fuse_mount(m_fuse_handler, directory.c_str());
 	if(ret != 0) {
 		SPDLOG_ERROR("fuse_mount failed: {}", ret);
 		return false;
