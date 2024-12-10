@@ -100,7 +100,6 @@ bool my_plugin::init(falcosecurity::init_input &in) {
 	        "backward compatibility.");
 
 	try {
-		// TODO
 		m_threads_table = t.get_table(THREAD_TABLE_NAME, st::SS_PLUGIN_ST_INT64);
 
 		// vpid and ptid are used to attach the category field to the thread entry
@@ -108,7 +107,10 @@ bool my_plugin::init(falcosecurity::init_input &in) {
 		        m_threads_table.get_field(t.fields(), TID_FIELD_NAME, st::SS_PLUGIN_ST_INT64);
 		m_threads_field_comm =
 		        m_threads_table.get_field(t.fields(), COMM_FIELD_NAME, st::SS_PLUGIN_ST_STRING);
-
+		m_threads_field_exe =
+		        m_threads_table.get_field(t.fields(), EXE_FIELD_NAME, st::SS_PLUGIN_ST_STRING);
+		m_threads_field_cwd =
+		        m_threads_table.get_field(t.fields(), CWD_FIELD_NAME, st::SS_PLUGIN_ST_STRING);
 	} catch(falcosecurity::plugin_exception e) {
 		m_lasterr = std::string("Failed to get a field from the table: ") + e.what();
 		SPDLOG_CRITICAL(m_lasterr);

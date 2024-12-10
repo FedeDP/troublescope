@@ -90,4 +90,8 @@ private:
 	falcosecurity::table_field m_threads_field_tid;
 	// Accessors to the thread table "comm" field
 	falcosecurity::table_field m_threads_field_comm;
+	// Accessors to the thread table "exe" field
+	falcosecurity::table_field m_threads_field_exe;
+	// Accessors to the thread table "cwd" field
+	falcosecurity::table_field m_threads_field_cwd;
 };

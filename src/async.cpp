@@ -21,13 +21,12 @@ std::vector<std::string> my_plugin::get_async_event_sources() {
 
 void generate_async_event(const std::unique_ptr<falcosecurity::async_event_handler> &h,
                           const std::string &event_name,
-                          void *data,
-                          uint32_t len) {
+                          int64_t tid,
+                          std::string msg) {
 	falcosecurity::events::asyncevent_e_encoder enc;
-	enc.set_tid(1);
+	enc.set_tid(tid);
 	enc.set_name(event_name);
-	// std::string msg = "fake_event";
-	enc.set_data(data, len);
+	enc.set_data((char *)msg.c_str(), msg.length() + 1);
 
 	enc.encode(h->writer());
 	h->push();
@@ -89,17 +88,11 @@ static int fuse_readdir(const char *path,
 		int pid = 0;
 
 		if(strcmp(path, "/") == 0) {
-			generate_async_event(ctx->async_event_handler,
-			                     ASYNC_EVENT_ROOT_NAME,
-			                     (void *)&pid,
-			                     sizeof(pid));
+			generate_async_event(ctx->async_event_handler, ASYNC_EVENT_ROOT_NAME, pid, "root");
 		}
 
 		if(sscanf(path, "/%d", &pid) == 1) {
-			generate_async_event(ctx->async_event_handler,
-			                     ASYNC_EVENT_PID_NAME,
-			                     (void *)&pid,
-			                     sizeof(pid));
+			generate_async_event(ctx->async_event_handler, ASYNC_EVENT_PID_NAME, pid, "pid");
 		}
 		ctx->m_cv.wait(l, [ctx] { return ctx->done; });
 	}
@@ -135,11 +128,9 @@ static int fuse_read(const char *path,
 		memset(buf, 0, size);
 		ctx->buf = buf;
 		int pid = 0;
-		sscanf(path, "/%d", &pid);
-		generate_async_event(ctx->async_event_handler,
-		                     ASYNC_EVENT_ENTRY_NAME,
-		                     (void *)&pid,
-		                     sizeof(pid));
+		char entry[32];
+		sscanf(path, "/%d/%s", &pid, entry);
+		generate_async_event(ctx->async_event_handler, ASYNC_EVENT_ENTRY_NAME, pid, entry);
 		ctx->m_cv.wait(l, [ctx] { return ctx->done; });
 	}
 
