@@ -10,7 +10,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 include(compiler)
 
 # project metadata
-project( troublescope
+project(
+  troublescope
   VERSION 0.1.0
   DESCRIPTION "Falco diagnostic Plugin"
   LANGUAGES CXX)
@@ -45,4 +46,4 @@ target_include_directories(troublescope PRIVATE ${PLUGIN_SDK_INCLUDE}
 
 # project linked libraries
 target_link_libraries(troublescope PRIVATE spdlog::spdlog_header_only
-    PkgConfig::FUSE3)
+                                           PkgConfig::FUSE3)

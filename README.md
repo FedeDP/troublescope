@@ -26,7 +26,7 @@ pre-commit install --install-hooks --hook-type pre-commit --overwrite
 pre-commit run --all-files
 ```
 
-## Run it
+## Run it with Falco (stale do not use it)
 
 - Download falco master tar.gz
 - Modify the Falco config
@@ -45,4 +45,20 @@ plugins:
 
 ```bash
 sudo ./usr/bin/falco -c ./etc/falco/falco.yaml -r ./etc/falco/falco_rules.yaml
+```
+
+## Run it with sinsp-example
+
+From libs master:
+
+```bash
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_DRIVER=ON -DBUILD_BPF=ON -DBUILD_LIBSCAP_MODERN_BPF=ON -DMODERN_BPF_DEBUG_MODE=ON -DUSE_BUNDLED_DEPS=ON -DMINIMAL_BUILD=ON ..
+make sinsp-example -j2 
+```
+
+Run it:
+
+```bash
+sudo /home/andrea/personal/libs/build-sinsp-fast/libsinsp/examples/sinsp-example -p "/home/andrea/personal/troublescope/build/libtroublescope.so|{\"fs_root\": \"/tmp/troublescope\"}" -m -f "evt.type in (open)" 
 ```
