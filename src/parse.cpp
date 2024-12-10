@@ -68,47 +68,11 @@ bool my_plugin::parse_async_event(const falcosecurity::parse_event_input &in) {
 	return true;
 }
 
-bool my_plugin::parse_new_process_event(const falcosecurity::parse_event_input &in) {
-	// get tid
-	auto thread_id = in.get_event_reader().get_tid();
-
-	// compute container_id from tid->cgroups
-	auto &tr = in.get_table_reader();
-
-	// retrieve the thread entry associated with this thread id
-	try {
-		auto thread_entry = m_threads_table.get_entry(tr, thread_id);
-
-		// TODO
-		return true;
-	} catch(falcosecurity::plugin_exception &e) {
-		SPDLOG_ERROR(
-		        "cannot attach fuseFS entry to new process event for the "
-		        "thread id '{}': {}",
-		        thread_id,
-		        e.what());
-		return false;
-	}
-}
-
 bool my_plugin::parse_event(const falcosecurity::parse_event_input &in) {
 	// NOTE: today in the libs framework, parsing errors are not logged
 	auto &evt = in.get_event_reader();
 
 	switch(evt.get_type()) {
-	case PPME_SYSCALL_CLONE_20_X:
-	case PPME_SYSCALL_FORK_20_X:
-	case PPME_SYSCALL_VFORK_20_X:
-	case PPME_SYSCALL_CLONE3_X:
-	case PPME_SYSCALL_EXECVE_16_X:
-	case PPME_SYSCALL_EXECVE_17_X:
-	case PPME_SYSCALL_EXECVE_18_X:
-	case PPME_SYSCALL_EXECVE_19_X:
-	case PPME_SYSCALL_EXECVEAT_X:
-		return parse_new_process_event(in);
-	case PPME_SYSCALL_PROCEXIT_X:
-		// TODO: remove pid?
-		return parse_new_process_event(in);
 	case PPME_ASYNCEVENT_E:
 		return parse_async_event(in);
 	default:

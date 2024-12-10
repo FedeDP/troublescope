@@ -38,18 +38,7 @@ limitations under the License.
 /////////////////////////
 // Parse capability
 /////////////////////////
-#define PARSE_EVENT_CODES      \
-	{PPME_SYSCALL_CLONE_20_X,  \
-	 PPME_SYSCALL_FORK_20_X,   \
-	 PPME_SYSCALL_VFORK_20_X,  \
-	 PPME_SYSCALL_CLONE3_X,    \
-	 PPME_SYSCALL_EXECVE_16_X, \
-	 PPME_SYSCALL_EXECVE_17_X, \
-	 PPME_SYSCALL_EXECVE_18_X, \
-	 PPME_SYSCALL_EXECVE_19_X, \
-	 PPME_SYSCALL_EXECVEAT_X,  \
-	 PPME_SYSCALL_PROCEXIT_X,  \
-	 PPME_ASYNCEVENT_E}
+#define PARSE_EVENT_CODES {PPME_ASYNCEVENT_E}
 
 #define PARSE_EVENT_SOURCES {"syscall"}
 
@@ -57,13 +46,6 @@ limitations under the License.
 // Table fields
 /////////////////////////
 #define THREAD_TABLE_NAME "threads"
-#define CGROUPS_TABLE_NAME "cgroups"
-#define CGROUP_SECOND_FIELD_NAME "second"
-#define CONTAINER_ID_FIELD_NAME "container_id"
-#define PIDNS_INIT_START_TS_FIELD_NAME "pidns_init_start_ts"
-#define CATEGORY_FIELD_NAME "category"
-#define VPID_FIELD_NAME "vpid"
-#define PTID_FIELD_NAME "ptid"
 #define TID_FIELD_NAME "tid"
 #define COMM_FIELD_NAME "comm"
 
