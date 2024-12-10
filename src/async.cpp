@@ -20,12 +20,14 @@ std::vector<std::string> my_plugin::get_async_event_sources() {
 }
 
 void generate_async_event(const std::unique_ptr<falcosecurity::async_event_handler> &h,
-                          const std::string &event_name) {
+                          const std::string &event_name,
+                          void *data,
+                          uint32_t len) {
 	falcosecurity::events::asyncevent_e_encoder enc;
 	enc.set_tid(1);
 	enc.set_name(event_name);
-	std::string msg = "fake_event";
-	enc.set_data((void *)msg.c_str(), msg.size() + 1);
+	// std::string msg = "fake_event";
+	enc.set_data(data, len);
 
 	enc.encode(h->writer());
 	h->push();
@@ -44,13 +46,15 @@ static int fuse_getattr(const char *path, struct stat *stbuf, struct fuse_file_i
 		stbuf->st_nlink = 0;  // TODO correct value
 		return 0;
 	}
-	int pid;
+
 	// FIXME
+	int pid;
 	if(sscanf(path, "/%d", &pid) == 1) {
 		stbuf->st_mode = S_IFDIR | 0755;
 		stbuf->st_nlink = 0;  // TODO correct value
 		return 0;
 	}
+
 	stbuf->st_mode = S_IFREG | 0444;
 	stbuf->st_nlink = 1;
 	stbuf->st_size = 1024;  // non-zero size
@@ -63,9 +67,6 @@ static int fuse_readdir(const char *path,
                         off_t offset,
                         struct fuse_file_info *fi,
                         enum fuse_readdir_flags flags) {
-	if(strcmp(path, "/") != 0)
-		return -ENOENT;
-
 	{
 		auto *ctx = (_fuse_context *)fuse_get_context()->private_data;
 		if(ctx == NULL) {
@@ -74,7 +75,21 @@ static int fuse_readdir(const char *path,
 		std::unique_lock l(ctx->m_mu);
 		ctx->filler = filler;
 		ctx->buf = buf;
-		generate_async_event(ctx->async_event_handler, ASYNC_EVENT_ROOT_NAME);
+		int pid = 0;
+
+		if(strcmp(path, "/") == 0) {
+			generate_async_event(ctx->async_event_handler,
+			                     ASYNC_EVENT_ROOT_NAME,
+			                     (void *)&pid,
+			                     sizeof(pid));
+		}
+
+		if(sscanf(path, "/%d", &pid) == 1) {
+			generate_async_event(ctx->async_event_handler,
+			                     ASYNC_EVENT_PID_NAME,
+			                     (void *)&pid,
+			                     sizeof(pid));
+		}
 		ctx->m_cv.wait(l, [ctx] { return ctx->done; });
 	}
 	return 0;
