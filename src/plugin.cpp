@@ -22,101 +22,112 @@ limitations under the License.
 // General plugin API
 //////////////////////////
 
-std::string my_plugin::get_name() { return PLUGIN_NAME; }
-
-std::string my_plugin::get_version() { return PLUGIN_VERSION; }
-
-std::string my_plugin::get_description() { return PLUGIN_DESCRIPTION; }
-
-std::string my_plugin::get_contact() { return PLUGIN_CONTACT; }
-
-std::string my_plugin::get_required_api_version() {
-  return PLUGIN_REQUIRED_API_VERSION;
+std::string my_plugin::get_name() {
+	return PLUGIN_NAME;
 }
 
-std::string my_plugin::get_last_error() { return m_lasterr; }
+std::string my_plugin::get_version() {
+	return PLUGIN_VERSION;
+}
 
-void my_plugin::destroy() { SPDLOG_DEBUG("detach the plugin"); }
+std::string my_plugin::get_description() {
+	return PLUGIN_DESCRIPTION;
+}
+
+std::string my_plugin::get_contact() {
+	return PLUGIN_CONTACT;
+}
+
+std::string my_plugin::get_required_api_version() {
+	return PLUGIN_REQUIRED_API_VERSION;
+}
+
+std::string my_plugin::get_last_error() {
+	return m_lasterr;
+}
+
+void my_plugin::destroy() {
+	SPDLOG_DEBUG("detach the plugin");
+}
 
 falcosecurity::init_schema my_plugin::get_init_schema() {
-  falcosecurity::init_schema init_schema;
-  init_schema.schema_type =
-      falcosecurity::init_schema_type::SS_PLUGIN_SCHEMA_JSON;
-  init_schema.schema = plugin_schema_string;
-  return init_schema;
+	falcosecurity::init_schema init_schema;
+	init_schema.schema_type = falcosecurity::init_schema_type::SS_PLUGIN_SCHEMA_JSON;
+	init_schema.schema = plugin_schema_string;
+	return init_schema;
 }
 
 void my_plugin::parse_init_config(nlohmann::json &config_json) {
-  m_cfg = config_json.get<PluginConfig>();
-  // Verbosity, the default verbosity is already set in the 'init' method
-  if (m_cfg.verbosity != "info") {
-    // If the user specified a verbosity we override the actual one (`info`)
-    spdlog::set_level(spdlog::level::from_str(m_cfg.verbosity));
-  }
+	m_cfg = config_json.get<PluginConfig>();
+	// Verbosity, the default verbosity is already set in the 'init' method
+	if(m_cfg.verbosity != "info") {
+		// If the user specified a verbosity we override the actual one (`info`)
+		spdlog::set_level(spdlog::level::from_str(m_cfg.verbosity));
+	}
 }
 
 bool my_plugin::init(falcosecurity::init_input &in) {
-  using st = falcosecurity::state_value_type;
-  auto &t = in.tables();
+	using st = falcosecurity::state_value_type;
+	auto &t = in.tables();
 
-  // The default logger is already multithread.
-  // The initial verbosity is `info`, after parsing the plugin config, this
-  // value could change
-  spdlog::set_level(spdlog::level::info);
+	// The default logger is already multithread.
+	// The initial verbosity is `info`, after parsing the plugin config, this
+	// value could change
+	spdlog::set_level(spdlog::level::info);
 
-  // Alternatives logs:
-  // spdlog::set_pattern("%a %b %d %X %Y: [%l] [container] %v");
-  //
-  // We use local time like in Falco, not UTC
-  spdlog::set_pattern("%c: [%l] [troublescope] %v");
+	// Alternatives logs:
+	// spdlog::set_pattern("%a %b %d %X %Y: [%l] [container] %v");
+	//
+	// We use local time like in Falco, not UTC
+	spdlog::set_pattern("%c: [%l] [troublescope] %v");
 
-  // This should never happen, the config is validated by the framework
-  if (in.get_config().empty()) {
-    m_lasterr = "cannot find the init config for the plugin";
-    SPDLOG_CRITICAL(m_lasterr);
-    return false;
-  }
+	// This should never happen, the config is validated by the framework
+	if(in.get_config().empty()) {
+		m_lasterr = "cannot find the init config for the plugin";
+		SPDLOG_CRITICAL(m_lasterr);
+		return false;
+	}
 
-  auto cfg = nlohmann::json::parse(in.get_config());
-  parse_init_config(cfg);
+	auto cfg = nlohmann::json::parse(in.get_config());
+	parse_init_config(cfg);
 
-  SPDLOG_DEBUG("init the plugin");
+	SPDLOG_DEBUG("init the plugin");
 
-  // Remove this log when we reach `1.0.0`
-  SPDLOG_WARN("[EXPERIMENTAL] This plugin is in active development "
-              "and may undergo changes in behavior without prioritizing "
-              "backward compatibility.");
+	// Remove this log when we reach `1.0.0`
+	SPDLOG_WARN(
+	        "[EXPERIMENTAL] This plugin is in active development "
+	        "and may undergo changes in behavior without prioritizing "
+	        "backward compatibility.");
 
-  try {
-    // TODO
-    m_threads_table = t.get_table(THREAD_TABLE_NAME, st::SS_PLUGIN_ST_INT64);
+	try {
+		// TODO
+		m_threads_table = t.get_table(THREAD_TABLE_NAME, st::SS_PLUGIN_ST_INT64);
 
-    // vpid and ptid are used to attach the category field to the thread entry
-    m_threads_field_tid = m_threads_table.get_field(t.fields(), TID_FIELD_NAME,
-                                                    st::SS_PLUGIN_ST_INT64);
-    m_threads_field_comm = m_threads_table.get_field(t.fields(), TID_FIELD_NAME,
-                                                     st::SS_PLUGIN_ST_STRING);
+		// vpid and ptid are used to attach the category field to the thread entry
+		m_threads_field_tid =
+		        m_threads_table.get_field(t.fields(), TID_FIELD_NAME, st::SS_PLUGIN_ST_INT64);
+		m_threads_field_comm =
+		        m_threads_table.get_field(t.fields(), TID_FIELD_NAME, st::SS_PLUGIN_ST_STRING);
 
-  } catch (falcosecurity::plugin_exception e) {
-    m_lasterr =
-        std::string("Failed to get a field gtom the table: ") + e.what();
-    SPDLOG_CRITICAL(m_lasterr);
-    return false;
-  }
-  // Initialize metrics
-  falcosecurity::metric n_procs(METRIC_N_PROCS);
-  n_procs.set_value(0);
-  m_metrics.push_back(n_procs);
+	} catch(falcosecurity::plugin_exception e) {
+		m_lasterr = std::string("Failed to get a field gtom the table: ") + e.what();
+		SPDLOG_CRITICAL(m_lasterr);
+		return false;
+	}
+	// Initialize metrics
+	falcosecurity::metric n_procs(METRIC_N_PROCS);
+	n_procs.set_value(0);
+	m_metrics.push_back(n_procs);
 
-  falcosecurity::metric n_missing(METRIC_N_MISSING);
-  n_missing.set_value(0);
-  m_metrics.push_back(n_missing);
+	falcosecurity::metric n_missing(METRIC_N_MISSING);
+	n_missing.set_value(0);
+	m_metrics.push_back(n_missing);
 
-  return true;
+	return true;
 }
 
 const std::vector<falcosecurity::metric> &my_plugin::get_metrics() {
-  return m_metrics;
+	return m_metrics;
 }
 
 FALCOSECURITY_PLUGIN(my_plugin);

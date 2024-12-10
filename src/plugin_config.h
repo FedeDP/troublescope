@@ -3,15 +3,15 @@
 #include <nlohmann/json.hpp>
 
 struct PluginConfig {
-  std::string verbosity;
-  int real_proc_scan_period; // seconds
-  std::string fs_root;       // root of fuseFS
+	std::string verbosity;
+	int real_proc_scan_period;  // seconds
+	std::string fs_root;        // root of fuseFS
 
-  PluginConfig() {
-    real_proc_scan_period = 30;
-    fs_root = ".";
-    verbosity = "info";
-  }
+	PluginConfig() {
+		real_proc_scan_period = 30;
+		fs_root = ".";
+		verbosity = "info";
+	}
 };
 
 /* Nlhomann adapters (implemented by plugin_config.cpp) */
