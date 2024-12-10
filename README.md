@@ -12,7 +12,10 @@ Also, a `diagnostic` event gets generated every time Falco proc tree diverges fr
 sudo apt install fuse3 libfuse3-dev
 git clone --recurse-submodules  git@github.com:FedeDP/troublescope.git
 cd troublescope
-make all
+# Do the following only if you don't have a system-wide vcpkg installation
+export VCPKG_ROOT=./vcpkg
+cmake -S . -B build --preset linux-gcc
+cmake --build build --target troublescope
 ```
 
 ## Formatting

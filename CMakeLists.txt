@@ -9,12 +9,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 # compiler related configs
 include(compiler)
 
-# Vcpkg related configs
-include(vcpkg)
-
 # project metadata
-project(
-  troublescope
+project( troublescope
   VERSION 0.1.0
   DESCRIPTION "Falco diagnostic Plugin"
   LANGUAGES CXX)
@@ -26,7 +22,7 @@ include(plugin-sdk-cpp)
 find_package(spdlog CONFIG REQUIRED)
 # libfuse is vcpkg installed but comes with pkg-config
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(FUSE3 REQUIRED fuse3 IMPORTED_TARGET)
+pkg_check_modules(FUSE3 REQUIRED IMPORTED_TARGET fuse3)
 
 file(GLOB_RECURSE SOURCES src/*.cpp)
 
@@ -49,4 +45,4 @@ target_include_directories(troublescope PRIVATE ${PLUGIN_SDK_INCLUDE}
 
 # project linked libraries
 target_link_libraries(troublescope PRIVATE spdlog::spdlog_header_only
-                                           PkgConfig::FUSE3)
+    PkgConfig::FUSE3)
