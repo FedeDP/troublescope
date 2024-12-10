@@ -24,6 +24,7 @@ limitations under the License.
 /////////////////////////
 #define ASYNC_EVENT_ROOT_NAME "diagnostic_dir"
 #define ASYNC_EVENT_PID_NAME "diagnostic_pid"
+#define ASYNC_EVENT_FD_ROOT_NAME "diagnostic_fd_root"
 #define ASYNC_EVENT_ENTRY_NAME "diagnostic_entry"
 #define ASYNC_EVENT_DIFF_NAME "diagnostic_diff"
 #define ASYNC_EVENT_NAME "diagnostic"
@@ -32,7 +33,8 @@ limitations under the License.
 	 ASYNC_EVENT_ROOT_NAME,  \
 	 ASYNC_EVENT_PID_NAME,   \
 	 ASYNC_EVENT_ENTRY_NAME, \
-	 ASYNC_EVENT_DIFF_NAME}
+	 ASYNC_EVENT_DIFF_NAME,  \
+	 ASYNC_EVENT_FD_ROOT_NAME}
 #define ASYNC_EVENT_SOURCES {"syscall"}
 
 /////////////////////////
@@ -57,6 +59,9 @@ limitations under the License.
 #define COMM_FIELD_NAME "comm"
 #define EXE_FIELD_NAME "exe"
 #define CWD_FIELD_NAME "cwd"
+#define FILE_DESCRIPTORS_FIELD_NAME "file_descriptors"
+#define FD_FIELD_NAME "name"
+#define FD_FIELD_FD "fd"
 
 /////////////////////////
 // Metrics

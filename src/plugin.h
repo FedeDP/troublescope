@@ -76,6 +76,7 @@ private:
 	void parse_pid_async_event(const falcosecurity::parse_event_input &in);
 	void parse_entry_async_event(const falcosecurity::parse_event_input &in);
 	void parse_diff_async_event(const falcosecurity::parse_event_input &in);
+	void parse_fd_root_async_event(const falcosecurity::parse_event_input &in);
 
 	// Async thread - fuseFS stuff
 	std::thread m_async_thread;
@@ -100,4 +101,9 @@ private:
 	falcosecurity::table_field m_threads_field_exe;
 	// Accessors to the thread table "cwd" field
 	falcosecurity::table_field m_threads_field_cwd;
+	// Accessors to the thread table "file_descriptors" field
+	falcosecurity::table_field m_threads_field_file_descriptors;
+	// Accessors to the file descriptor table "name" subfield
+	falcosecurity::table_field m_fd_field_name;
+	falcosecurity::table_field m_fd_field_fd;
 };
