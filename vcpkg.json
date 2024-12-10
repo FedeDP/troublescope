@@ -3,7 +3,14 @@
   "version-string": "0.0.1",
   "license": "MIT",
   "dependencies": [
-    "spdlog",
-    "libfuse"
-  ]
+    {
+      "name": "spdlog",
+      "version>=": "1.15.0"
+    },
+    {
+      "name": "libfuse",
+      "version>=": "3.16.2"
+    }
+  ],
+  "builtin-baseline": "96b5ced82828ecaf67e6010a892c98d3e96ed1c2"
 }
