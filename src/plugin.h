@@ -50,7 +50,6 @@ public:
 	std::vector<std::string> get_async_event_sources();
 	bool start_async_events(std::shared_ptr<falcosecurity::async_event_handler_factory> f);
 	bool stop_async_events() noexcept;
-	void eventfd_read(int event_fd);
 	void async_thread_loop(std::unique_ptr<falcosecurity::async_event_handler> h,
 	                       struct fuse *fuse_handler,
 	                       int fuse_fd,
@@ -72,9 +71,13 @@ public:
 	bool capture_close(const falcosecurity::capture_listen_input &in);
 
 private:
-	// Async thread
+	// Async thread - fuseFS stuff
 	std::thread m_async_thread;
 	int m_event_fd = -1;
+	int m_fuse_fd = -1;
+	struct fuse_buf m_fuse_buf;
+	struct fuse *m_fuse_handler;
+	struct fuse_args m_fuse_args;
 
 	std::vector<falcosecurity::metric> m_metrics;
 

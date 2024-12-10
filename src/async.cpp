@@ -3,6 +3,9 @@
 #include <sys/eventfd.h>
 #include <sys/poll.h>
 
+#define POLL_FD_FUSE 0
+#define POLL_FD_EVENTFD 1
+
 //////////////////////////
 // Async capability
 //////////////////////////
@@ -26,13 +29,13 @@ void generate_async_event(const char *json, bool added) {
 	// s_async_handler->push();
 }
 
-static void *hello_init(struct fuse_conn_info *conn, struct fuse_config *cfg) {
+static void *fuse_init(struct fuse_conn_info *conn, struct fuse_config *cfg) {
 	(void)conn;
 	cfg->kernel_cache = 1;
 	return NULL;
 }
 
-static int hello_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi) {
+static int fuse_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi) {
 	(void)fi;
 	int res = 0;
 
@@ -41,12 +44,12 @@ static int hello_getattr(const char *path, struct stat *stbuf, struct fuse_file_
 	return res;
 }
 
-static int hello_readdir(const char *path,
-                         void *buf,
-                         fuse_fill_dir_t filler,
-                         off_t offset,
-                         struct fuse_file_info *fi,
-                         enum fuse_readdir_flags flags) {
+static int fuse_readdir(const char *path,
+                        void *buf,
+                        fuse_fill_dir_t filler,
+                        off_t offset,
+                        struct fuse_file_info *fi,
+                        enum fuse_readdir_flags flags) {
 	(void)offset;
 	(void)fi;
 	(void)flags;
@@ -57,18 +60,18 @@ static int hello_readdir(const char *path,
 	return 0;
 }
 
-static int hello_open(const char *path, struct fuse_file_info *fi) {
+static int fuse_open(const char *path, struct fuse_file_info *fi) {
 	if((fi->flags & O_ACCMODE) != O_RDONLY)
 		return -EACCES;
 
 	return 0;
 }
 
-static int hello_read(const char *path,
-                      char *buf,
-                      size_t size,
-                      off_t offset,
-                      struct fuse_file_info *fi) {
+static int fuse_read(const char *path,
+                     char *buf,
+                     size_t size,
+                     off_t offset,
+                     struct fuse_file_info *fi) {
 	size_t len;
 	(void)fi;
 
@@ -76,11 +79,11 @@ static int hello_read(const char *path,
 }
 
 static constexpr struct fuse_operations ops = {
-        .getattr = hello_getattr,
-        .open = hello_open,
-        .read = hello_read,
-        .readdir = hello_readdir,
-        .init = hello_init,
+        .getattr = fuse_getattr,
+        .open = fuse_open,
+        .read = fuse_read,
+        .readdir = fuse_readdir,
+        .init = fuse_init,
 };
 
 void my_plugin::async_thread_loop(std::unique_ptr<falcosecurity::async_event_handler> h,
@@ -88,12 +91,11 @@ void my_plugin::async_thread_loop(std::unique_ptr<falcosecurity::async_event_han
                                   int fuse_fd,
                                   int event_fd) noexcept {
 	struct pollfd fds[2];
-	fds[0].fd = fuse_fd;
-	fds[0].events = POLLIN;
-	fds[1].fd = event_fd;
-	fds[1].events = POLLIN;
+	fds[POLL_FD_FUSE].fd = fuse_fd;
+	fds[POLL_FD_FUSE].events = POLLIN;
+	fds[POLL_FD_EVENTFD].fd = event_fd;
+	fds[POLL_FD_EVENTFD].events = POLLIN;
 
-	struct fuse_buf buf;
 	while(true) {
 		auto ret = poll(fds, std::size(fds), -1);
 		switch(ret) {
@@ -101,15 +103,18 @@ void my_plugin::async_thread_loop(std::unique_ptr<falcosecurity::async_event_han
 		case 0:
 			break;
 		default: {
-			if(fds[0].revents & POLLIN) {
+			// Process fuseFS events
+			if(fds[POLL_FD_FUSE].revents & POLLIN) {
 				struct fuse_session *sess = fuse_get_session(fuse_handler);
-				int ret = fuse_session_receive_buf(sess, &buf);
+				int ret = fuse_session_receive_buf(sess, &m_fuse_buf);
 				if(ret > 0) {
-					fuse_session_process_buf(sess, &buf);
+					fuse_session_process_buf(sess, &m_fuse_buf);
 				}
 			}
-			if(fds[1].revents & POLLIN) {
-				eventfd_read(event_fd);
+			// Process eventfd exit request
+			if(fds[POLL_FD_EVENTFD].revents & POLLIN) {
+				uint64_t tt;
+				eventfd_read(event_fd, &tt);
 				goto exit;
 			}
 			break;
@@ -124,17 +129,16 @@ exit:
 // We need this API to start the async thread when the
 // `set_async_event_handler` plugin API will be called.
 bool my_plugin::start_async_events(std::shared_ptr<falcosecurity::async_event_handler_factory> f) {
-	struct fuse_args args;
-	fuse_opt_add_arg(&args, PLUGIN_NAME);
+	fuse_opt_add_arg(&m_fuse_args, PLUGIN_NAME);
 	// New handler to generate async event to request fuseFS refreshes
-	auto fuse_handler = fuse_new(&args, &ops, sizeof(ops), nullptr);
-	auto ret = fuse_mount(fuse_handler, m_cfg.fs_root.c_str());
+	m_fuse_handler = fuse_new(&m_fuse_args, &ops, sizeof(ops), nullptr);
+	auto ret = fuse_mount(m_fuse_handler, m_cfg.fs_root.c_str());
 	if(ret != 0) {
 		SPDLOG_ERROR("fuse_mount failed: {}", ret);
 		return false;
 	}
-	auto fuse_fd = fuse_session_fd(fuse_get_session(fuse_handler));
-	if(fuse_fd < 0) {
+	m_fuse_fd = fuse_session_fd(fuse_get_session(m_fuse_handler));
+	if(m_fuse_fd < 0) {
 		SPDLOG_ERROR("fuse_session_fd failed");
 		return false;
 	}
@@ -143,8 +147,8 @@ bool my_plugin::start_async_events(std::shared_ptr<falcosecurity::async_event_ha
 	m_async_thread = std::thread(&my_plugin::async_thread_loop,
 	                             this,
 	                             std::move(f->new_handler()),
-	                             fuse_handler,
-	                             fuse_fd,
+	                             m_fuse_handler,
+	                             m_fuse_fd,
 	                             m_event_fd);
 
 	SPDLOG_DEBUG("starting async thread");
@@ -156,6 +160,13 @@ bool my_plugin::start_async_events(std::shared_ptr<falcosecurity::async_event_ha
 bool my_plugin::stop_async_events() noexcept {
 	eventfd_write(m_event_fd, 1);
 	m_async_thread.join();
+	close(m_event_fd);
+	close(m_fuse_fd);
+
+	free(m_fuse_buf.mem);
+	fuse_unmount(m_fuse_handler);
+	fuse_destroy(m_fuse_handler);
+	fuse_opt_free_args(&m_fuse_args);
 	SPDLOG_DEBUG("joined the async thread");
 	return true;
 }
