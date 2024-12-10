@@ -19,8 +19,8 @@ limitations under the License.
 #include "macros.h"
 #include "plugin_config.h"
 #define FUSE_USE_VERSION 31
-#include <fuse.h>
-#include <fuse_lowlevel.h>  // to get fuse fd to process events internally
+#include <fuse3/fuse.h>
+#include <fuse3/fuse_lowlevel.h>  // to get fuse fd to process events internally
 
 class my_plugin {
 public:
