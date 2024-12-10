@@ -1,0 +1,51 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Default Config",
+      "description": "Default configuration for all platforms",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_MAKE_PROGRAM": "/usr/bin/make"
+      }
+    },
+    {
+      "name": "linux-gcc",
+      "inherits": "default",
+      "displayName": "Linux vcpkg-clang Config",
+      "description": "Build under Linux using vcpkg as a package manager and clang",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "/usr/bin/gcc",
+        "CMAKE_CXX_COMPILER": "/usr/bin/g++",
+        "VCPKG_TARGET_TRIPLET": "x64-linux-dynamic"
+      }
+    },
+    {
+      "name": "osx-clang",
+      "inherits": "default",
+      "displayName": "MacOS vcpkg-clang Config",
+      "description": "Build under MacOS using vcpkg as a package manager and gcc",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "/usr/bin/clang",
+        "CMAKE_CXX_COMPILER": "/usr/bin/clang++"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "linux-gcc",
+      "configurePreset": "linux-gcc",
+      "jobs": 16
+    },
+    {
+      "name": "osx-clang",
+      "configurePreset": "osx-clang",
+      "jobs": 16
+    }
+  ]
+}
