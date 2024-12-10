@@ -57,7 +57,11 @@ static int fuse_getattr(const char *path, struct stat *stbuf, struct fuse_file_i
 	}
 	if(ret == 2) {
 		// we matched /1000/foo
-		stbuf->st_mode = S_IFREG | 0444;
+		if(strcmp(p, "cwd") == 0 || strcmp(p, "exe") == 0) {
+			stbuf->st_mode = S_IFLNK | 0444;
+		} else {
+			stbuf->st_mode = S_IFREG | 0444;
+		}
 		stbuf->st_nlink = 1;
 		stbuf->st_size = 1024;  // non-zero size
 		return 0;
@@ -138,8 +142,27 @@ static int fuse_read(const char *path,
 	return size;
 }
 
+static int fuse_readlink(const char *path, char *buf, size_t size) {
+	auto *ctx = (struct _fuse_context *)fuse_get_context()->private_data;
+	if(ctx == NULL) {
+		return -EINVAL;
+	}
+
+	std::unique_lock l(ctx->m_mu);
+	ctx->done = false;
+	memset(buf, 0, size);
+	ctx->buf = buf;
+	int pid = 0;
+	char entry[32];
+	sscanf(path, "/%d/%s", &pid, entry);
+	generate_async_event(ctx->async_event_handler, ASYNC_EVENT_ENTRY_NAME, pid, entry);
+	ctx->m_cv.wait(l, [ctx] { return ctx->done; });
+	return 0;
+};
+
 static constexpr struct fuse_operations ops = {
         .getattr = fuse_getattr,
+        .readlink = fuse_readlink,
         .open = fuse_open,
         .read = fuse_read,
         .readdir = fuse_readdir,
