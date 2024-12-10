@@ -20,119 +20,15 @@ const char plugin_schema_string[] = LONG_STRING_CONST(
          "title":"The plugin logging verbosity",
          "description":"The verbosity that the plugin will use when printing logs."
       },
-      "label_max_len":{
+      "real_proc_scan_period":{
          "type":"integer",
-         "title":"Max label length",
-         "description":"Labels exceeding this limit won't be reported."
+         "title":"RealProc scan period",
+         "description":"Period in seconds between real proc scans."
       },
-      "engines":{
-         "$ref":"#/definitions/Engines",
-         "title":"The plugin per-engine configuration",
-         "description":"Allows to disable/enable each engine and customize sockets where available."
-      }
-   },
-   "definitions":{
-      "Engines":{
-         "type":"object",
-         "additionalProperties":false,
-         "properties":{
-            "docker":{
-               "$ref":"#/definitions/SocketsContainer"
-            },
-            "podman":{
-               "$ref":"#/definitions/SocketsContainer"
-            },
-            "containerd":{
-               "$ref":"#/definitions/SocketsContainer"
-            },
-            "cri":{
-               "$ref":"#/definitions/SocketsContainer"
-            },
-            "lxc":{
-               "$ref":"#/definitions/SimpleContainer"
-            },
-            "libvirt_lxc":{
-               "$ref":"#/definitions/SimpleContainer"
-            },
-            "bpm":{
-               "$ref":"#/definitions/SimpleContainer"
-            },
-            "static":{
-               "$ref":"#/definitions/StaticContainer"
-            }
-         },
-         "required":[
-            "bpm",
-            "containerd",
-            "cri",
-            "docker",
-            "libvirt_lxc",
-            "lxc",
-            "podman"
-         ],
-         "title":"Engines"
-      },
-      "nonEmptyString":{
+      "fs_root":{
          "type":"string",
-         "minLength":1
-      },
-      "SimpleContainer":{
-         "type":"object",
-         "additionalProperties":false,
-         "properties":{
-            "enabled":{
-               "type":"boolean"
-            }
-         },
-         "required":[
-            "enabled"
-         ],
-         "title":"SimpleContainer"
-      },
-      "SocketsContainer":{
-         "type":"object",
-         "additionalProperties":false,
-         "properties":{
-            "enabled":{
-               "type":"boolean"
-            },
-            "sockets":{
-               "type":"array",
-               "items":{
-                  "type":"string"
-               }
-            }
-         },
-         "required":[
-            "enabled",
-            "sockets"
-         ],
-         "title":"SocketsContainer"
-      },
-      "StaticContainer":{
-         "type":"object",
-         "additionalProperties":false,
-         "properties":{
-            "enabled":{
-               "type":"boolean"
-            },
-            "container_id":{
-               "$ref":"#/definitions/nonEmptyString"
-            },
-            "container_name":{
-               "$ref":"#/definitions/nonEmptyString"
-            },
-            "container_image":{
-               "$ref":"#/definitions/nonEmptyString"
-            }
-         },
-         "required":[
-            "enabled",
-            "container_id",
-            "container_name",
-            "container_image"
-         ],
-         "title":"StaticContainer"
+         "title":"Fs Root",
+         "description":"Root for Fuse FileSystem."
       }
    },
    "additionalProperties":false,
