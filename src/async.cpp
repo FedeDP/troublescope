@@ -47,18 +47,23 @@ static int fuse_getattr(const char *path, struct stat *stbuf, struct fuse_file_i
 		return 0;
 	}
 
-	// FIXME
 	int pid;
-	if(sscanf(path, "/%d", &pid) == 1) {
+	char p[32];
+	int ret = sscanf(path, "/%d/%s", &pid, p);
+	if(ret == 1) {
+		// we only matched "/1000"
 		stbuf->st_mode = S_IFDIR | 0755;
 		stbuf->st_nlink = 0;  // TODO correct value
 		return 0;
 	}
-
-	stbuf->st_mode = S_IFREG | 0444;
-	stbuf->st_nlink = 1;
-	stbuf->st_size = 1024;  // non-zero size
-	return 0;
+	if(ret == 2) {
+		// we matched /1000/foo
+		stbuf->st_mode = S_IFREG | 0444;
+		stbuf->st_nlink = 1;
+		stbuf->st_size = 1024;  // non-zero size
+		return 0;
+	}
+	return -EINVAL;
 }
 
 static int fuse_readdir(const char *path,
@@ -107,9 +112,23 @@ static int fuse_read(const char *path,
                      size_t size,
                      off_t offset,
                      struct fuse_file_info *fi) {
-	size_t len;
-	(void)fi;
+	{
+		auto *ctx = (struct _fuse_context *)fuse_get_context()->private_data;
+		if(ctx == NULL) {
+			return -EINVAL;
+		}
+		std::unique_lock l(ctx->m_mu);
+		ctx->buf = buf;
+		int pid = 0;
+		sscanf(path, "/%d", &pid);
+		generate_async_event(ctx->async_event_handler,
+		                     ASYNC_EVENT_ENTRY_NAME,
+		                     (void *)&pid,
+		                     sizeof(pid));
+		ctx->m_cv.wait(l, [ctx] { return ctx->done; });
+	}
 
+	size = strlen(buf);
 	return size;
 }
 
