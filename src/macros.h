@@ -50,6 +50,8 @@ limitations under the License.
 #define THREAD_TABLE_NAME "threads"
 #define TID_FIELD_NAME "tid"
 #define COMM_FIELD_NAME "comm"
+#define EXE_FIELD_NAME "exe"
+#define CWD_FIELD_NAME "cwd"
 
 /////////////////////////
 // Metrics

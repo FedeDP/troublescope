@@ -55,17 +55,39 @@ bool my_plugin::parse_async_event(const falcosecurity::parse_event_input &in) {
 		                      NULL,
 		                      0,
 		                      static_cast<enum fuse_fill_dir_flags>(0));
+		m_fuse_context.filler(m_fuse_context.buf,
+		                      "exe",
+		                      NULL,
+		                      0,
+		                      static_cast<enum fuse_fill_dir_flags>(0));
+		m_fuse_context.filler(m_fuse_context.buf,
+		                      "cwd",
+		                      NULL,
+		                      0,
+		                      static_cast<enum fuse_fill_dir_flags>(0));
 	}
 
 	if(is_entry) {
 		uint32_t len = 0;
-		void *data = dec.get_data(len);
-		int pid = *(int *)data;
+		char *field = (char *)dec.get_data(len);
+		auto tid = evt.get_tid();
 		try {
-			auto tinfo = m_threads_table.get_entry(tr, (int64_t)pid);
-			std::string comm = "";
-			m_threads_field_comm.read_value(tr, tinfo, comm);
-			memcpy(m_fuse_context.buf, comm.c_str(), comm.length() + 1);
+			auto tinfo = m_threads_table.get_entry(tr, (int64_t)tid);
+			if(!strcmp(field, "comm")) {
+				std::string comm = "";
+				m_threads_field_comm.read_value(tr, tinfo, comm);
+				memcpy(m_fuse_context.buf, comm.c_str(), comm.length() + 1);
+			}
+			if(!strcmp(field, "exe")) {
+				std::string exe = "";
+				m_threads_field_exe.read_value(tr, tinfo, exe);
+				memcpy(m_fuse_context.buf, exe.c_str(), exe.length() + 1);
+			}
+			if(!strcmp(field, "cwd")) {
+				std::string cwd = "";
+				m_threads_field_cwd.read_value(tr, tinfo, cwd);
+				memcpy(m_fuse_context.buf, cwd.c_str(), cwd.length() + 1);
+			}
 		} catch(...) {
 		}
 	}
