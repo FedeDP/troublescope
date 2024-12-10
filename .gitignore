@@ -3,3 +3,4 @@
 *.o
 .idea
 build*
+.vscode

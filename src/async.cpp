@@ -86,6 +86,7 @@ void my_plugin::async_thread_loop(
   char *argv[] = {"troublescope", "-f", (char *)m_cfg.fs_root.c_str()};
   struct fuse_args args = {3, argv, 0};
   // move on secondary thread
+  SPDLOG_INFO("Async thread start");
   fuse_main(args.argc, args.argv, &hello_oper, NULL);
   fuse_opt_free_args(&args);
   SPDLOG_INFO("Async thread terminated");
