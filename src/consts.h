@@ -20,8 +20,8 @@ limitations under the License.
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
 
 #include <falcosecurity/sdk.h>
-#include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_sinks.h>
+#include <spdlog/spdlog.h>
 
 // Sinsp events used in the plugin
 using _et = falcosecurity::event_type;

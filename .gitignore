@@ -1,6 +1,5 @@
 *.so
 *.a
 *.o
-.vscode
 .idea
 build*
