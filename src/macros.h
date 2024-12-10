@@ -60,6 +60,8 @@ limitations under the License.
 #define CATEGORY_FIELD_NAME "category"
 #define VPID_FIELD_NAME "vpid"
 #define PTID_FIELD_NAME "ptid"
+#define TID_FIELD_NAME "tid"
+#define COMM_FIELD_NAME "comm"
 
 /////////////////////////
 // Metrics

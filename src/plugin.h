@@ -89,7 +89,9 @@ private:
   // Accessors to the thread table "vpid" field
   falcosecurity::table_field m_threads_field_vpid;
   // Accessors to the thread table "ptid" field
-  falcosecurity::table_field m_threads_field_ptid;
+  falcosecurity::table_field m_threads_field_tid;
+  falcosecurity::table_field m_threads_field_comm;
+
   // Accessors to the thread table "cgroups" table
   falcosecurity::table_field m_threads_field_cgroups;
   // Accessors to the thread table "cgroups" "second" field, ie: the cgroups

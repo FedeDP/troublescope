@@ -22,3 +22,24 @@ pre-commit install --install-hooks --hook-type pre-commit --overwrite
 # or
 pre-commit run --all-files
 ```
+
+## Run it
+
+- Download falco master tar.gz
+- Modify the Falco config
+
+```yaml
+load_plugins: [troublescope]
+
+# Customize subsettings for each enabled plugin. These settings will only be
+# applied when the corresponding plugin is enabled using the `load_plugins`
+# option.
+plugins:
+  - name: troublescope
+    library_path: /home/andrea/personal/troublescope/libtroublescope.so
+    init_config: ""
+```
+
+```bash
+sudo ./usr/bin/falco -c ./etc/falco/falco.yaml -r ./etc/falco/falco_rules.yaml
+```
