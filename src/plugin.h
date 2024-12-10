@@ -21,6 +21,14 @@ limitations under the License.
 #include <fuse3/fuse.h>
 #include <fuse3/fuse_lowlevel.h>  // to get fuse fd to process events internally
 
+struct _fuse_context {
+	std::unique_ptr<falcosecurity::async_event_handler> async_event_handler;
+	std::condition_variable m_cv;
+	std::mutex m_mu;
+	fuse_fill_dir_t filler;
+	void *buf;
+};
+
 class my_plugin {
 public:
 	//////////////////////////
@@ -49,10 +57,7 @@ public:
 	std::vector<std::string> get_async_event_sources();
 	bool start_async_events(std::shared_ptr<falcosecurity::async_event_handler_factory> f);
 	bool stop_async_events() noexcept;
-	void async_thread_loop(std::unique_ptr<falcosecurity::async_event_handler> h,
-	                       struct fuse *fuse_handler,
-	                       int fuse_fd,
-	                       int event_fd) noexcept;
+	void async_thread_loop(std::unique_ptr<falcosecurity::async_event_handler> h) noexcept;
 
 	//////////////////////////
 	// Parse capability
@@ -61,6 +66,7 @@ public:
 	std::vector<std::string> get_parse_event_sources();
 	std::vector<falcosecurity::event_type> get_parse_event_types();
 	bool parse_new_process_event(const falcosecurity::parse_event_input &in);
+	bool parse_async_event(const falcosecurity::parse_event_input &in);
 	bool parse_event(const falcosecurity::parse_event_input &in);
 
 	//////////////////////////
@@ -68,6 +74,8 @@ public:
 	//////////////////////////
 	bool capture_open(const falcosecurity::capture_listen_input &in);
 	bool capture_close(const falcosecurity::capture_listen_input &in);
+
+	struct _fuse_context m_fuse_context;
 
 private:
 	// Async thread - fuseFS stuff

@@ -35,3 +35,4 @@ constexpr auto PPME_SYSCALL_EXECVE_18_X = (_et)289;
 constexpr auto PPME_SYSCALL_EXECVE_19_X = (_et)293;
 constexpr auto PPME_SYSCALL_EXECVEAT_X = (_et)331;
 constexpr auto PPME_SYSCALL_PROCEXIT_X = (_et)187;
+constexpr auto PPME_ASYNCEVENT_E = (_et)402;
