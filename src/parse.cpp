@@ -64,6 +64,7 @@ bool my_plugin::parse_async_event(const falcosecurity::parse_event_input &in) {
 		return true;
 	});
 
+	m_fuse_context.done = true;
 	m_fuse_context.m_cv.notify_all();
 	return true;
 }

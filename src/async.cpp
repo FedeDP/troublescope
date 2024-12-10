@@ -67,7 +67,7 @@ static int fuse_readdir(const char *path,
 		return -ENOENT;
 
 	{
-		auto *ctx = (struct _fuse_context *)fuse_get_context()->private_data;
+		auto *ctx = (_fuse_context *)fuse_get_context()->private_data;
 		if(ctx == NULL) {
 			return -EINVAL;
 		}
@@ -75,7 +75,7 @@ static int fuse_readdir(const char *path,
 		ctx->filler = filler;
 		ctx->buf = buf;
 		generate_async_event(ctx->async_event_handler, ASYNC_EVENT_ROOT_NAME);
-		ctx->m_cv.wait(l);  // todo!: fix spurious notifications
+		ctx->m_cv.wait(l, [ctx] { return ctx->done; });
 	}
 	return 0;
 }
