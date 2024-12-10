@@ -85,6 +85,7 @@ static int fuse_readdir(const char *path,
 		std::unique_lock l(ctx->m_mu);
 		ctx->filler = filler;
 		ctx->buf = buf;
+		ctx->done = false;
 		int pid = 0;
 
 		if(strcmp(path, "/") == 0) {
@@ -109,6 +110,8 @@ static int fuse_open(const char *path, struct fuse_file_info *fi) {
 	if((fi->flags & O_ACCMODE) != O_RDONLY)
 		return -EACCES;
 
+	fi->direct_io = 0;
+	fi->nonseekable = 0;
 	return 0;
 }
 
@@ -128,6 +131,7 @@ static int fuse_read(const char *path,
 		}
 
 		std::unique_lock l(ctx->m_mu);
+		ctx->done = false;
 		memset(buf, 0, size);
 		ctx->buf = buf;
 		int pid = 0;
