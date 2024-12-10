@@ -42,6 +42,9 @@ std::vector<falcosecurity::event_type> my_plugin::get_parse_event_types() {
 bool my_plugin::parse_async_event(const falcosecurity::parse_event_input &in) {
 	auto &evt = in.get_event_reader();
 	falcosecurity::events::asyncevent_e_decoder ad(evt);
+
+	falcosecurity::events::asyncevent_e_decoder dec(in.get_event_reader());
+
 	bool is_root = std::strcmp(ad.get_name(), ASYNC_EVENT_ROOT_NAME) == 0;
 	bool is_pid = std::strcmp(ad.get_name(), ASYNC_EVENT_PID_NAME) == 0;
 	if(!is_root && !is_pid) {
@@ -53,16 +56,38 @@ bool my_plugin::parse_async_event(const falcosecurity::parse_event_input &in) {
 	}
 
 	auto &tr = in.get_table_reader();
-	m_threads_table.iterate_entries(tr, [this, tr](const falcosecurity::table_entry &e) {
-		int64_t tid;
-		m_threads_field_tid.read_value(tr, e, tid);
+
+	if(is_root) {
+		m_threads_table.iterate_entries(tr, [this, tr](const falcosecurity::table_entry &e) {
+			int64_t tid;
+			m_threads_field_tid.read_value(tr, e, tid);
+			m_fuse_context.filler(m_fuse_context.buf,
+			                      std::to_string(tid).c_str(),
+			                      NULL,
+			                      0,
+			                      static_cast<enum fuse_fill_dir_flags>(0));
+			return true;
+		});
+	}
+
+	if(is_pid) {
+		uint32_t len = 0;
+		void *data = dec.get_data(len);
+		int pid = *(int *)data;
+
+		printf("PID: %d", pid);
+
+		/*auto tinfo = m_threads_table.get_entry(tr, (int64_t)pid);
+
+		std::string comm = "";
+		m_threads_field_comm.read_value(tr, tinfo, comm);*/
+
 		m_fuse_context.filler(m_fuse_context.buf,
-		                      std::to_string(tid).c_str(),
+		                      "comm",
 		                      NULL,
 		                      0,
 		                      static_cast<enum fuse_fill_dir_flags>(0));
-		return true;
-	});
+	}
 
 	m_fuse_context.done = true;
 	m_fuse_context.m_cv.notify_all();
