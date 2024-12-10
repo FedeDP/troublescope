@@ -22,10 +22,12 @@ limitations under the License.
 /////////////////////////
 // Async capability
 /////////////////////////
+#define ASYNC_EVENT_ROOT_NAME "diagnostic_dir"
+#define ASYNC_EVENT_PID_NAME "diagnostic_pid"
 #define ASYNC_EVENT_NAME "diagnostic"
 #define ASYNC_EVENT_NAMES                                                      \
     {                                                                          \
-        ASYNC_EVENT_NAME                                                       \
+        ASYNC_EVENT_NAME, ASYNC_EVENT_ROOT_NAME, ASYNC_EVENT_PID_NAME          \
     }
 #define ASYNC_EVENT_SOURCES                                                    \
     {                                                                          \
@@ -54,7 +56,7 @@ limitations under the License.
         PPME_SYSCALL_VFORK_20_X, PPME_SYSCALL_CLONE3_X,                        \
         PPME_SYSCALL_EXECVE_16_X, PPME_SYSCALL_EXECVE_17_X,                    \
         PPME_SYSCALL_EXECVE_18_X, PPME_SYSCALL_EXECVE_19_X,                    \
-        PPME_SYSCALL_EXECVEAT_X, PPME_SYSCALL_CHROOT_X                         \
+        PPME_SYSCALL_EXECVEAT_X, PPME_SYSCALL_PROCEXIT_X                       \
     }
 
 #define PARSE_EVENT_SOURCES                                                    \

@@ -49,6 +49,8 @@ public:
     std::vector<std::string> get_async_event_sources();
     bool start_async_events(std::shared_ptr<falcosecurity::async_event_handler_factory> f);
     bool stop_async_events() noexcept;
+    void async_thread_loop(
+            std::unique_ptr<falcosecurity::async_event_handler> h) noexcept;
 
     //////////////////////////
     // Parse capability
@@ -66,7 +68,12 @@ public:
     bool capture_close(const falcosecurity::capture_listen_input& in);
 
 private:
-    // State table
+    // Async thread
+    std::thread m_async_thread;
+    std::atomic<bool> m_async_thread_quit;
+    std::condition_variable m_cv;
+    std::mutex m_mu;
+
     std::vector<falcosecurity::metric> m_metrics;
 
     PluginConfig m_cfg;
