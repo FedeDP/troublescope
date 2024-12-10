@@ -129,10 +129,16 @@ exit:
 // We need this API to start the async thread when the
 // `set_async_event_handler` plugin API will be called.
 bool my_plugin::start_async_events(std::shared_ptr<falcosecurity::async_event_handler_factory> f) {
+	auto ret = mkdir(m_cfg.fs_root.c_str(), 0777);
+	if(ret < 0) {
+		SPDLOG_ERROR("mkdir failed: {}", errno);
+		return false;
+	}
+
 	fuse_opt_add_arg(&m_fuse_args, PLUGIN_NAME);
 	// New handler to generate async event to request fuseFS refreshes
 	m_fuse_handler = fuse_new(&m_fuse_args, &ops, sizeof(ops), nullptr);
-	auto ret = fuse_mount(m_fuse_handler, m_cfg.fs_root.c_str());
+	ret = fuse_mount(m_fuse_handler, m_cfg.fs_root.c_str());
 	if(ret != 0) {
 		SPDLOG_ERROR("fuse_mount failed: {}", ret);
 		return false;
@@ -167,6 +173,7 @@ bool my_plugin::stop_async_events() noexcept {
 	fuse_unmount(m_fuse_handler);
 	fuse_destroy(m_fuse_handler);
 	fuse_opt_free_args(&m_fuse_args);
+	rmdir(m_cfg.fs_root.c_str());
 	SPDLOG_DEBUG("joined the async thread");
 	return true;
 }

@@ -16,7 +16,6 @@ limitations under the License.
 */
 
 #include "consts.h"
-#include "macros.h"
 #include "plugin_config.h"
 #define FUSE_USE_VERSION 31
 #include <fuse3/fuse.h>

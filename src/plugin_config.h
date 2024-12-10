@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nlohmann/json.hpp>
+#include "macros.h"
 
 struct PluginConfig {
 	std::string verbosity;
@@ -9,7 +10,7 @@ struct PluginConfig {
 
 	PluginConfig() {
 		real_proc_scan_period = 30;
-		fs_root = ".";
+		fs_root = "/tmp/troublescope";
 		verbosity = "info";
 	}
 };
