@@ -59,6 +59,7 @@ public:
 	bool start_async_events(std::shared_ptr<falcosecurity::async_event_handler_factory> f);
 	bool stop_async_events() noexcept;
 	void async_thread_loop(std::unique_ptr<falcosecurity::async_event_handler> h) noexcept;
+	void diff_notify(std::unique_ptr<falcosecurity::async_event_handler> h) noexcept;
 
 	//////////////////////////
 	// Parse capability
@@ -68,7 +69,7 @@ public:
 	std::vector<falcosecurity::event_type> get_parse_event_types();
 	bool parse_async_event(const falcosecurity::parse_event_input &in);
 	bool parse_event(const falcosecurity::parse_event_input &in);
-
+	bool parse_diff_async_event(const falcosecurity::parse_event_input &in);
 	struct _fuse_context m_fuse_context;
 
 private:
@@ -79,6 +80,12 @@ private:
 	struct fuse_buf m_fuse_buf;
 	struct fuse *m_fuse_handler;
 	struct fuse_args m_fuse_args;
+
+	// Async thread - diff notification
+	std::thread m_diff_notify_thread;
+	std::atomic<bool> m_diff_notify_thread_quit;
+	std::condition_variable m_diff_cv;
+	std::mutex m_diff_mu;
 
 	PluginConfig m_cfg;
 

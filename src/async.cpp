@@ -6,6 +6,7 @@
 
 #define POLL_FD_FUSE 0
 #define POLL_FD_EVENTFD 1
+#define DIFF_NOTIFY_INTERVALS 10 * 60  // 10 minutes
 
 //////////////////////////
 // Async capability
@@ -146,6 +147,7 @@ static constexpr struct fuse_operations ops = {
 };
 
 void my_plugin::async_thread_loop(std::unique_ptr<falcosecurity::async_event_handler> h) noexcept {
+	SPDLOG_INFO("Start FUSE fs thread");
 	struct pollfd fds[2];
 	fds[POLL_FD_FUSE].fd = m_fuse_fd;
 	fds[POLL_FD_FUSE].events = POLLIN;
@@ -179,7 +181,20 @@ void my_plugin::async_thread_loop(std::unique_ptr<falcosecurity::async_event_han
 	}
 
 exit:
-	SPDLOG_INFO("Async thread terminated");
+	SPDLOG_INFO("Stop FUSE fs thread");
+}
+
+void my_plugin::diff_notify(std::unique_ptr<falcosecurity::async_event_handler> h) noexcept {
+	SPDLOG_INFO("Start diff notify thread");
+	while(!m_diff_notify_thread_quit.load()) {
+		// -1 should be a valid tid for async events
+		generate_async_event(h, ASYNC_EVENT_DIFF_NAME, -1, "root");
+		std::unique_lock<std::mutex> l(m_diff_mu);
+		m_diff_cv.wait_for(l, std::chrono::seconds(DIFF_NOTIFY_INTERVALS), [this] {
+			return m_diff_notify_thread_quit.load();
+		});
+	}
+	SPDLOG_INFO("Stop diff notify thread");
 }
 
 // We need this API to start the async thread when the
@@ -219,8 +234,7 @@ bool my_plugin::start_async_events(std::shared_ptr<falcosecurity::async_event_ha
 	m_event_fd = eventfd(0, 0);
 
 	m_async_thread = std::thread(&my_plugin::async_thread_loop, this, std::move(f->new_handler()));
-
-	SPDLOG_DEBUG("starting async thread");
+	m_diff_notify_thread = std::thread(&my_plugin::diff_notify, this, std::move(f->new_handler()));
 	return true;
 }
 
@@ -238,6 +252,10 @@ bool my_plugin::stop_async_events() noexcept {
 	fuse_opt_free_args(&m_fuse_args);
 	rmdir(m_cfg.fs_root.c_str());
 	SPDLOG_DEBUG("joined the async thread");
+
+	m_diff_notify_thread_quit.store(true);
+	m_diff_cv.notify_one();
+	m_diff_notify_thread.join();
 	return true;
 }
 
