@@ -112,37 +112,9 @@ static int fuse_open(const char *path, struct fuse_file_info *fi) {
 	return 0;
 }
 
-static int fuse_read(const char *path,
-                     char *buf,
-                     size_t size,
-                     off_t offset,
-                     struct fuse_file_info *fi) {
-	{
-		auto *ctx = (struct _fuse_context *)fuse_get_context()->private_data;
-		if(ctx == NULL) {
-			return -EINVAL;
-		}
-		if(offset != 0) {
-			// Unsupported
-			return -EPERM;
-		}
-
-		std::unique_lock l(ctx->m_mu);
-		ctx->done = false;
-		memset(buf, 0, size);
-		ctx->buf = buf;
-		int pid = 0;
-		char entry[32];
-		sscanf(path, "/%d/%s", &pid, entry);
-		generate_async_event(ctx->async_event_handler, ASYNC_EVENT_ENTRY_NAME, pid, entry);
-		ctx->m_cv.wait(l, [ctx] { return ctx->done; });
-	}
-
-	size = strlen(buf) + 1;
-	return size;
-}
-
-static int fuse_readlink(const char *path, char *buf, size_t size) {
+// This function is used to get an entry value for a path by generating an
+// ASYNC_EVENT_ENTRY_NAME event.
+static int _get_entry_value(const char *path, char *buf, size_t size) {
 	auto *ctx = (struct _fuse_context *)fuse_get_context()->private_data;
 	if(ctx == NULL) {
 		return -EINVAL;
@@ -157,7 +129,26 @@ static int fuse_readlink(const char *path, char *buf, size_t size) {
 	sscanf(path, "/%d/%s", &pid, entry);
 	generate_async_event(ctx->async_event_handler, ASYNC_EVENT_ENTRY_NAME, pid, entry);
 	ctx->m_cv.wait(l, [ctx] { return ctx->done; });
-	return 0;
+	return strlen(buf) + 1;
+}
+
+static int fuse_read(const char *path,
+                     char *buf,
+                     size_t size,
+                     off_t offset,
+                     struct fuse_file_info *fi) {
+	if(offset != 0) {
+		// Unsupported
+		return -EPERM;
+	}
+	return _get_entry_value(path, buf, size);
+}
+
+static int fuse_readlink(const char *path, char *buf, size_t size) {
+	if(auto read_size = _get_entry_value(path, buf, size); read_size > 0) {
+		return 0;
+	}
+	return -ENOENT;
 };
 
 static constexpr struct fuse_operations ops = {
