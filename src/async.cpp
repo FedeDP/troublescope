@@ -22,19 +22,12 @@ void generate_async_event(const std::unique_ptr<falcosecurity::async_event_handl
                           const std::string &event_name) {
 	falcosecurity::events::asyncevent_e_encoder enc;
 	enc.set_tid(1);
-	std::string msg = "TOPKEKTOP";
 	enc.set_name(event_name);
+	std::string msg = "fake_event";
 	enc.set_data((void *)msg.c_str(), msg.size() + 1);
 
 	enc.encode(h->writer());
 	h->push();
-}
-
-static void *fuse_init(struct fuse_conn_info *conn, struct fuse_config *cfg) {
-	(void)conn;
-	cfg->kernel_cache = 1;
-
-	return NULL;
 }
 
 static int fuse_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi) {
@@ -47,7 +40,14 @@ static int fuse_getattr(const char *path, struct stat *stbuf, struct fuse_file_i
 	stbuf->st_mtime = time(NULL);
 	if(strcmp(path, "/") == 0) {  // root dir of fuse fs
 		stbuf->st_mode = S_IFDIR | 0755;
-		stbuf->st_nlink = 32;
+		stbuf->st_nlink = 0;  // TODO correct value
+		return 0;
+	}
+	int pid;
+	// FIXME
+	if(sscanf(path, "/%d", &pid) == 1) {
+		stbuf->st_mode = S_IFDIR | 0755;
+		stbuf->st_nlink = 0;  // TODO correct value
 		return 0;
 	}
 	stbuf->st_mode = S_IFREG | 0444;
@@ -62,18 +62,18 @@ static int fuse_readdir(const char *path,
                         off_t offset,
                         struct fuse_file_info *fi,
                         enum fuse_readdir_flags flags) {
-	printf("topkek %p\n", fuse_get_context()->private_data);
 	if(strcmp(path, "/") != 0)
 		return -ENOENT;
 
 	{
 		auto *ctx = (struct _fuse_context *)fuse_get_context()->private_data;
+		if(ctx == NULL) {
+			return -EINVAL;
+		}
 		std::unique_lock l(ctx->m_mu);
 		ctx->filler = filler;
 		ctx->buf = buf;
-		printf("topkek 0.0\n");
 		generate_async_event(ctx->async_event_handler, ASYNC_EVENT_ROOT_NAME);
-		printf("topkek 0.1\n");
 		ctx->m_cv.wait(l);
 	}
 	return 0;
@@ -102,7 +102,6 @@ static constexpr struct fuse_operations ops = {
         .open = fuse_open,
         .read = fuse_read,
         .readdir = fuse_readdir,
-        .init = fuse_init,
 };
 
 void my_plugin::async_thread_loop(std::unique_ptr<falcosecurity::async_event_handler> h) noexcept {
