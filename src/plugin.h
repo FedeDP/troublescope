@@ -65,15 +65,8 @@ public:
 
 	std::vector<std::string> get_parse_event_sources();
 	std::vector<falcosecurity::event_type> get_parse_event_types();
-	bool parse_new_process_event(const falcosecurity::parse_event_input &in);
 	bool parse_async_event(const falcosecurity::parse_event_input &in);
 	bool parse_event(const falcosecurity::parse_event_input &in);
-
-	//////////////////////////
-	// Listening capability
-	//////////////////////////
-	bool capture_open(const falcosecurity::capture_listen_input &in);
-	bool capture_close(const falcosecurity::capture_listen_input &in);
 
 	struct _fuse_context m_fuse_context;
 
