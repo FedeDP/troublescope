@@ -24,6 +24,7 @@ limitations under the License.
 struct _fuse_context {
 	std::unique_ptr<falcosecurity::async_event_handler> async_event_handler;
 	std::condition_variable m_cv;
+	bool done = false;
 	std::mutex m_mu;
 	fuse_fill_dir_t filler;
 	void *buf;
