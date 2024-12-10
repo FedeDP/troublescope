@@ -15,6 +15,7 @@
 
 NAME := troublescope
 OUTPUT := lib$(NAME).so
+export VCPKG_ROOT := ./vcpkg
 
 all: $(OUTPUT)
 
