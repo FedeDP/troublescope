@@ -24,8 +24,10 @@ limitations under the License.
 /////////////////////////
 #define ASYNC_EVENT_ROOT_NAME "diagnostic_dir"
 #define ASYNC_EVENT_PID_NAME "diagnostic_pid"
+#define ASYNC_EVENT_ENTRY_NAME "diagnostic_entry"
 #define ASYNC_EVENT_NAME "diagnostic"
-#define ASYNC_EVENT_NAMES {ASYNC_EVENT_NAME, ASYNC_EVENT_ROOT_NAME, ASYNC_EVENT_PID_NAME}
+#define ASYNC_EVENT_NAMES \
+	{ASYNC_EVENT_NAME, ASYNC_EVENT_ROOT_NAME, ASYNC_EVENT_PID_NAME, ASYNC_EVENT_ENTRY_NAME}
 #define ASYNC_EVENT_SOURCES {"syscall"}
 
 /////////////////////////
