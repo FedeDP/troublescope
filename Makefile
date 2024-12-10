@@ -25,7 +25,7 @@ clean:
 # This Makefile requires CMake installed on the system
 .PHONY: $(OUTPUT)
 $(OUTPUT):
-	cmake -B build -S . && make -C build/ troublescope -j6 && cp build/$(OUTPUT) $(OUTPUT)
+	cmake -B build -S . --preset linux-gcc && cmake --build build --target troublescope && cp build/$(OUTPUT) $(OUTPUT)
 
 readme:
 	@$(READMETOOL) -p ./$(OUTPUT) -f README.md

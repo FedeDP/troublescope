@@ -17,22 +17,12 @@
     {
       "name": "linux-gcc",
       "inherits": "default",
-      "displayName": "Linux vcpkg-clang Config",
-      "description": "Build under Linux using vcpkg as a package manager and clang",
+      "displayName": "Linux vcpkg-gcc Config",
+      "description": "Build under Linux using vcpkg as a package manager and gcc",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "/usr/bin/gcc",
         "CMAKE_CXX_COMPILER": "/usr/bin/g++",
         "VCPKG_TARGET_TRIPLET": "x64-linux-dynamic"
-      }
-    },
-    {
-      "name": "osx-clang",
-      "inherits": "default",
-      "displayName": "MacOS vcpkg-clang Config",
-      "description": "Build under MacOS using vcpkg as a package manager and gcc",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "/usr/bin/clang",
-        "CMAKE_CXX_COMPILER": "/usr/bin/clang++"
       }
     }
   ],
@@ -40,11 +30,6 @@
     {
       "name": "linux-gcc",
       "configurePreset": "linux-gcc",
-      "jobs": 16
-    },
-    {
-      "name": "osx-clang",
-      "configurePreset": "osx-clang",
       "jobs": 16
     }
   ]
