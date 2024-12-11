@@ -1,5 +1,9 @@
 #include "proc_diff.h"
 
+#include <filesystem>
+#include <fstream>
+#include <sstream>
+
 proc_entry proc_entry::from_proc_fs(const std::string& path) {
 	namespace fs = std::filesystem;
 	proc_entry entry;
