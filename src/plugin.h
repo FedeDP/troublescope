@@ -106,4 +106,8 @@ private:
 	// Accessors to the file descriptor table "name" subfield
 	falcosecurity::table_field m_fd_field_name;
 	falcosecurity::table_field m_fd_field_fd;
+	// Accessors to the thread table "cgroups" field
+	falcosecurity::table_field m_threads_field_cgroups;
+	// Accessors to the thread table "cgroups" "second" field
+	falcosecurity::table_field m_cgroups_field_second;
 };
