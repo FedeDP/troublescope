@@ -19,10 +19,7 @@ limitations under the License.
 
 #include <fmt/core.h>
 
-#include <filesystem>
-#include <fstream>
 #include <string>
-#include <sstream>
 
 struct proc_entry {
 	enum class proc_file {
@@ -35,9 +32,10 @@ struct proc_entry {
 	std::string content = "";
 
 	std::string to_string() const {
-		std::stringstream ss;
-		ss << "path: " << path << ", is_symlink: " << is_symlink << ", content: " << content;
-		return ss.str();
+		return fmt::format("path: '{}', is_symlink: '{}', content: '{}'",
+		                   path,
+		                   is_symlink,
+		                   content);
 	}
 	bool operator==(const proc_entry& other) const {
 		return path == other.path && is_symlink == other.is_symlink && content == other.content;
