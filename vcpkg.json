@@ -9,7 +9,8 @@
     },
     {
       "name": "libfuse",
-      "version>=": "3.16.2"
+      "version>=": "3.16.2",
+      "platform": "linux"
     }
   ],
   "builtin-baseline": "96b5ced82828ecaf67e6010a892c98d3e96ed1c2"
