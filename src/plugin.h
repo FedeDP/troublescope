@@ -14,20 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 */
+#pragma once
 
 #include "consts.h"
 #include "plugin_config.h"
+#include "proc_diff.h"
 #define FUSE_USE_VERSION 31
 #include <fuse3/fuse.h>
 #include <fuse3/fuse_lowlevel.h>  // to get fuse fd to process events internally
 
-struct _fuse_context {
+struct plugin_context {
 	std::unique_ptr<falcosecurity::async_event_handler> async_event_handler;
 	std::condition_variable m_cv;
 	bool done = false;
 	std::mutex m_mu;
 	fuse_fill_dir_t filler;
 	void *buf;
+	std::unordered_map<std::string, proc_entry> sinsp_entries;
+	std::unordered_map<std::string, proc_entry> proc_entries;
 };
 
 class my_plugin {
@@ -69,7 +73,7 @@ public:
 	bool parse_async_event(const falcosecurity::parse_event_input &in);
 	bool parse_event(const falcosecurity::parse_event_input &in);
 
-	struct _fuse_context m_fuse_context;
+	struct plugin_context m_context;
 
 private:
 	void parse_root_async_event(const falcosecurity::parse_event_input &in);

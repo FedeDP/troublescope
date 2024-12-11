@@ -19,10 +19,10 @@ std::vector<std::string> my_plugin::get_async_event_sources() {
 	return ASYNC_EVENT_SOURCES;
 }
 
-void generate_async_event(const std::unique_ptr<falcosecurity::async_event_handler> &h,
-                          const std::string &event_name,
-                          int64_t tid,
-                          std::string msg) {
+static void generate_async_event(const std::unique_ptr<falcosecurity::async_event_handler> &h,
+                                 const std::string &event_name,
+                                 int64_t tid,
+                                 const std::string &msg) {
 	falcosecurity::events::asyncevent_e_encoder enc;
 	enc.set_tid(tid);
 	enc.set_name(event_name);
@@ -99,7 +99,7 @@ static int fuse_readdir(const char *path,
                         struct fuse_file_info *fi,
                         enum fuse_readdir_flags flags) {
 	{
-		auto *ctx = (_fuse_context *)fuse_get_context()->private_data;
+		auto *ctx = static_cast<plugin_context *>(fuse_get_context()->private_data);
 		if(ctx == NULL) {
 			return -EINVAL;
 		}
@@ -150,7 +150,7 @@ static int fuse_open(const char *path, struct fuse_file_info *fi) {
 // This function is used to get an entry value for a path by generating an
 // ASYNC_EVENT_ENTRY_NAME event.
 static int _get_entry_value(const char *path, char *buf, size_t size) {
-	auto *ctx = (struct _fuse_context *)fuse_get_context()->private_data;
+	auto *ctx = static_cast<struct plugin_context *>(fuse_get_context()->private_data);
 	if(ctx == NULL) {
 		return -EINVAL;
 	}
@@ -230,10 +230,36 @@ void my_plugin::async_thread_loop(std::unique_ptr<falcosecurity::async_event_han
 				// consume
 				uint64_t tt;
 				if(const auto res = read(m_timer_fd, &tt, sizeof(uint64_t)); res >= 0) {
-					std::unique_lock<std::mutex> l(m_fuse_context.m_mu);
+					std::unique_lock l(m_context.m_mu);
+					m_context.proc_entries.clear();
+					m_context.sinsp_entries.clear();
+					m_context.done = false;
+
 					// -1 should be a valid tid for async events
 					generate_async_event(h, ASYNC_EVENT_DIFF_NAME, -1, "root");
-					m_fuse_context.m_cv.wait(l, [&] { return m_fuse_context.done; });
+					m_context.m_cv.wait(l, [&] { return m_context.done; });
+
+					nlohmann::json j;
+					auto &j_diff = j["diff"];
+					size_t diffs = 0;
+					for(const auto &e : m_context.sinsp_entries) {
+						const auto sinsp_e = e.second;
+						if(m_context.proc_entries.count(e.first) > 0) {
+							const auto &proc_e = m_context.proc_entries.at(e.first);
+							if(sinsp_e != proc_e) {
+								diffs++;
+								auto &j_entry = j_diff[e.first];
+								j_entry["sinsp"]["comm"] = sinsp_e.content;
+								j_entry["sinsp"]["symlink"] = sinsp_e.is_symlink;
+								j_entry["proc"]["comm"] = proc_e.content;
+								j_entry["proc"]["symlink"] = proc_e.is_symlink;
+							}
+						}
+					}
+					if(diffs > 0) {
+						// real event
+						generate_async_event(h, ASYNC_EVENT_NAME, -1, j.dump());
+					}
 				}
 			}
 			break;
@@ -267,8 +293,8 @@ bool my_plugin::start_async_events(std::shared_ptr<falcosecurity::async_event_ha
 
 	SPDLOG_INFO("FUSE filesystem at {}", directory.string());
 	fuse_opt_add_arg(&m_fuse_args, PLUGIN_NAME);
-	m_fuse_context.async_event_handler = f->new_handler();
-	m_fuse_handler = fuse_new(&m_fuse_args, &ops, sizeof(ops), &m_fuse_context);
+	m_context.async_event_handler = f->new_handler();
+	m_fuse_handler = fuse_new(&m_fuse_args, &ops, sizeof(ops), &m_context);
 	int ret = fuse_mount(m_fuse_handler, directory.c_str());
 	if(ret != 0) {
 		SPDLOG_ERROR("fuse_mount failed: {}", ret);
