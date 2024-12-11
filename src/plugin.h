@@ -117,4 +117,10 @@ private:
 	falcosecurity::table_field m_threads_field_cgroups;
 	// Accessors to the thread table "cgroups" "second" field
 	falcosecurity::table_field m_cgroups_field_second;
+	// Accessors to the thread table "exe" field
+	falcosecurity::table_field m_threads_field_exe;
+	// Accessors to the thread table "args" field
+	falcosecurity::table_field m_threads_field_args;
+	// Accessors to the thread table "args" "value" field
+	falcosecurity::table_field m_args_field_value;
 };

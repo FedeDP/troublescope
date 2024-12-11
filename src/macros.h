@@ -65,6 +65,9 @@ limitations under the License.
 #define FD_FIELD_FD "fd"
 #define CGROUP_FIELD_NAME "cgroup"
 #define CGROUPS_TABLE_NAME "cgroups"
+#define EXE_FIELD_NAME "exe"
+#define ARGS_FIELD_NAME "args"
+#define CMDLINE_FILENAME "cmdline"
 
 /////////////////////////
 // Metrics
