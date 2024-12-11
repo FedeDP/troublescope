@@ -42,7 +42,7 @@ void my_plugin::parse_pid_async_event(const falcosecurity::parse_event_input &in
 	                      0,
 	                      static_cast<enum fuse_fill_dir_flags>(0));
 	m_fuse_context.filler(m_fuse_context.buf,
-	                      EXE_FIELD_NAME,
+	                      EXE_PATH_FIELD_NAME,
 	                      NULL,
 	                      0,
 	                      static_cast<enum fuse_fill_dir_flags>(0));
@@ -89,10 +89,10 @@ void my_plugin::parse_entry_async_event(const falcosecurity::parse_event_input &
 			comm += '\n';
 			memcpy(m_fuse_context.buf, comm.c_str(), comm.length() + 1);
 		}
-		if(!strcmp(field, EXE_FIELD_NAME)) {
-			std::string exe;
-			m_threads_field_exe.read_value(tr, tinfo, exe);
-			memcpy(m_fuse_context.buf, exe.c_str(), exe.length() + 1);
+		if(!strcmp(field, EXE_PATH_FILENAME)) {
+			std::string exe_path;
+			m_threads_field_exe_path.read_value(tr, tinfo, exe_path);
+			memcpy(m_fuse_context.buf, exe_path.c_str(), exe_path.length() + 1);
 		}
 		if(!strcmp(field, CWD_FIELD_NAME)) {
 			std::string cwd;

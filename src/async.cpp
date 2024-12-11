@@ -80,7 +80,7 @@ static int fuse_getattr(const char *path, struct stat *stbuf, struct fuse_file_i
 		}
 
 		// we matched /1000/foo
-		if(strcmp(p, "cwd") == 0 || strcmp(p, "exe") == 0) {
+		if(strcmp(p, "cwd") == 0 || strcmp(p, EXE_PATH_FILENAME) == 0) {
 			stbuf->st_mode = S_IFLNK | 0444;
 		} else {
 			stbuf->st_mode = S_IFREG | 0444;
