@@ -34,3 +34,59 @@ jobs:
         with:
           name: troublescope-binary
           path: ./libtroublescope.so
+
+
+  oci-artifact:
+    runs-on: ubuntu-latest
+    needs: build
+    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
+    permissions:
+      id-token: write
+      contents: read
+      packages: write
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: troublescope-binary
+          path: artifact-output
+
+      - name: Create tag
+        run: |
+          if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
+            TAG="pr-$(echo $GITHUB_SHA | cut -c1-8)"
+          else
+            TAG="main"
+          fi
+          echo "Tag created: $TAG"
+          echo "TAG=$TAG" >> $GITHUB_ENV
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.22"
+          check-latest: true
+
+      - name: Install falcoctl
+        run: |
+          go install github.com/falcosecurity/falcoctl@v0.10.1
+     
+      - name: Setting global variables
+        uses: actions/github-script@v6
+        id: repo
+        with:
+          script: |
+            core.setOutput('repo_name', '${{github.repository}}'.toLowerCase());
+
+      - name: Upload OCI artifacts to GitHub packages
+        run: |
+             falcoctl registry push \
+             --config /dev/null \
+             --type plugin \
+             --version 0.0.0 \
+             ghcr.io/${{steps.repo.outputs.repo_name}}:${TAG} \
+             --platform linux/amd64 \
+             ./artifact-output/libtroublescope.so          
+        env:
+          FALCOCTL_REGISTRY_AUTH_BASIC: ghcr.io,${{ github.repository_owner }},${{ secrets.GITHUB_TOKEN }}
