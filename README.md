@@ -5,6 +5,8 @@ It can be useful to debug weird proc tree issues.
 
 Also, a `diagnostic` event gets generated every time Falco proc tree diverges from real proc.
 
+The plugin requires the `3.7.0` plugin API version.
+
 ## Build
 
 ```bash

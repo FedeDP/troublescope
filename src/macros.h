@@ -76,4 +76,4 @@ limitations under the License.
 #define PLUGIN_VERSION "0.1.0"
 #define PLUGIN_DESCRIPTION "Falco proc tree diagnostic plugin"
 #define PLUGIN_CONTACT "github.com/falcosecurity/plugins"
-#define PLUGIN_REQUIRED_API_VERSION "3.10.0"
+#define PLUGIN_REQUIRED_API_VERSION "3.7.0"
