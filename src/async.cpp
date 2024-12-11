@@ -248,11 +248,14 @@ void my_plugin::async_thread_loop(std::unique_ptr<falcosecurity::async_event_han
 							const auto &proc_e = m_context.proc_entries.at(e.first);
 							if(sinsp_e != proc_e) {
 								diffs++;
-								auto &j_entry = j_diff[e.first];
-								j_entry["sinsp"]["comm"] = sinsp_e.content;
-								j_entry["sinsp"]["symlink"] = sinsp_e.is_symlink;
-								j_entry["proc"]["comm"] = proc_e.content;
-								j_entry["proc"]["symlink"] = proc_e.is_symlink;
+								auto &j_entry = j_diff[std::to_string(sinsp_e.tid)];
+
+								nlohmann::json d;
+								d["field"] = sinsp_e.proc_file_str();
+								d["sinsp"] = sinsp_e.content;
+								d["proc"] = proc_e.content;
+
+								j_entry.push_back(d);
 							}
 						}
 					}
