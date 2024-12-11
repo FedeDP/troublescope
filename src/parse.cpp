@@ -1,6 +1,7 @@
 #include <set>
-#include <fmt/core.h>
 #include <unordered_map>
+#include "falcosecurity/async_event_handler.h"
+#include "falcosecurity/table.h"
 #include "plugin.h"
 #include "proc_diff.h"
 
@@ -155,14 +156,13 @@ void my_plugin::parse_diff_async_event(const falcosecurity::parse_event_input &i
 	m_threads_table.iterate_entries(tr, [&](const falcosecurity::table_entry &e) {
 		int64_t tid;
 		// Comm entry
-		proc_entry tt_comm, proc_comm;
-		m_threads_field_tid.read_value(tr, e, tid);
-		m_threads_field_comm.read_value(tr, e, tt_comm.content);
-		tt_comm.is_symlink = false;
+		proc_entry tt_comm(proc_entry::from_thread_table(m_threads_field_comm,
+		                                                 tr,
+		                                                 e,
+		                                                 tid,
+		                                                 proc_entry::proc_file::comm));
+		proc_entry proc_comm(proc_entry::from_proc_fs(tt_comm.path));
 		tt_entries.insert({tt_comm.path, tt_comm});
-		// TODO Use fmt::format to format the path
-		tt_comm.path = fmt::format("/proc/{}/comm", tid);
-		proc_comm = proc_entry::from_proc_fs(tt_comm.path);
 		if(!proc_comm.path.empty()) {
 			proc_entries.insert({proc_comm.path, proc_comm});
 		}
