@@ -219,7 +219,6 @@ bool my_plugin::parse_async_event(const falcosecurity::parse_event_input &in) {
 bool my_plugin::parse_event(const falcosecurity::parse_event_input &in) {
 	// NOTE: today in the libs framework, parsing errors are not logged
 	auto &evt = in.get_event_reader();
-	SPDLOG_INFO("[parse_event] Parsing event");
 
 	switch(evt.get_type()) {
 	case PPME_ASYNCEVENT_E:
