@@ -22,7 +22,7 @@
 			"cacheVariables": {
 				"CMAKE_C_COMPILER": "/usr/bin/gcc",
 				"CMAKE_CXX_COMPILER": "/usr/bin/g++",
-				"VCPKG_TARGET_TRIPLET": "x64-linux-dynamic"
+				"VCPKG_TARGET_TRIPLET": "x64-linux-mixed"
 			}
 		}
 	],
