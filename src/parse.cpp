@@ -3,7 +3,6 @@
 #include "falcosecurity/async_event_handler.h"
 #include "falcosecurity/table.h"
 #include "plugin.h"
-#include "proc_diff.h"
 
 //////////////////////////
 // Parse capability
@@ -27,49 +26,41 @@ void my_plugin::parse_root_async_event(const falcosecurity::parse_event_input &i
 	m_threads_table.iterate_entries(tr, [this, tr](const falcosecurity::table_entry &e) {
 		int64_t tid;
 		m_threads_field_tid.read_value(tr, e, tid);
-		m_fuse_context.filler(m_fuse_context.buf,
-		                      std::to_string(tid).c_str(),
-		                      NULL,
-		                      0,
-		                      static_cast<enum fuse_fill_dir_flags>(0));
+		m_context.filler(m_context.buf,
+		                 std::to_string(tid).c_str(),
+		                 NULL,
+		                 0,
+		                 static_cast<enum fuse_fill_dir_flags>(0));
 		return true;
 	});
 }
 
 void my_plugin::parse_pid_async_event(const falcosecurity::parse_event_input &in) {
-	m_fuse_context.filler(m_fuse_context.buf,
-	                      COMM_FIELD_NAME,
-	                      NULL,
-	                      0,
-	                      static_cast<enum fuse_fill_dir_flags>(0));
-	m_fuse_context.filler(m_fuse_context.buf,
-	                      EXE_PATH_FILENAME,
-	                      NULL,
-	                      0,
-	                      static_cast<enum fuse_fill_dir_flags>(0));
-	m_fuse_context.filler(m_fuse_context.buf,
-	                      CWD_FIELD_NAME,
-	                      NULL,
-	                      0,
-	                      static_cast<enum fuse_fill_dir_flags>(0));
-	m_fuse_context.filler(m_fuse_context.buf,
-	                      "fdinfo",
-	                      NULL,
-	                      0,
-	                      static_cast<enum fuse_fill_dir_flags>(0));
-	m_fuse_context.filler(m_fuse_context.buf,
-	                      CGROUP_FIELD_NAME,
-	                      NULL,
-	                      0,
-	                      static_cast<enum fuse_fill_dir_flags>(0));
+	m_context.filler(m_context.buf,
+	                 COMM_FIELD_NAME,
+	                 NULL,
+	                 0,
+	                 static_cast<enum fuse_fill_dir_flags>(0));
+	m_context.filler(m_context.buf,
+	                 EXE_PATH_FILENAME,
+	                 NULL,
+	                 0,
+	                 static_cast<enum fuse_fill_dir_flags>(0));
+	m_context.filler(m_context.buf,
+	                 CWD_FIELD_NAME,
+	                 NULL,
+	                 0,
+	                 static_cast<enum fuse_fill_dir_flags>(0));
+	m_context.filler(m_context.buf, "fdinfo", NULL, 0, static_cast<enum fuse_fill_dir_flags>(0));
+	m_context.filler(m_context.buf,
+	                 CGROUP_FIELD_NAME,
+	                 NULL,
+	                 0,
+	                 static_cast<enum fuse_fill_dir_flags>(0));
 }
 
 void my_plugin::parse_fd_root_async_event(const falcosecurity::parse_event_input &in) {
-	m_fuse_context.filler(m_fuse_context.buf,
-	                      "name",
-	                      NULL,
-	                      0,
-	                      static_cast<enum fuse_fill_dir_flags>(0));
+	m_context.filler(m_context.buf, "name", NULL, 0, static_cast<enum fuse_fill_dir_flags>(0));
 }
 
 void my_plugin::parse_entry_async_event(const falcosecurity::parse_event_input &in) {
@@ -88,12 +79,12 @@ void my_plugin::parse_entry_async_event(const falcosecurity::parse_event_input &
 			std::string comm;
 			m_threads_field_comm.read_value(tr, tinfo, comm);
 			comm += '\n';
-			memcpy(m_fuse_context.buf, comm.c_str(), comm.length() + 1);
+			memcpy(m_context.buf, comm.c_str(), comm.length() + 1);
 		}
 		if(!strcmp(field, EXE_PATH_FILENAME)) {
 			std::string exe_path;
 			m_threads_field_exe_path.read_value(tr, tinfo, exe_path);
-			memcpy(m_fuse_context.buf, exe_path.c_str(), exe_path.length() + 1);
+			memcpy(m_context.buf, exe_path.c_str(), exe_path.length() + 1);
 		}
 		if(!strcmp(field, CWD_FIELD_NAME)) {
 			std::string cwd;
@@ -102,7 +93,7 @@ void my_plugin::parse_entry_async_event(const falcosecurity::parse_event_input &
 				// If the cwd is empty, we set it to the root directory
 				cwd = "/";
 			}
-			memcpy(m_fuse_context.buf, cwd.c_str(), cwd.length() + 1);
+			memcpy(m_context.buf, cwd.c_str(), cwd.length() + 1);
 		}
 		if(!strcmp(field, "fdinfo")) {
 			auto fd_table = m_threads_table.get_subtable(tr,
@@ -112,11 +103,11 @@ void my_plugin::parse_entry_async_event(const falcosecurity::parse_event_input &
 			fd_table.iterate_entries(tr, [this, tr](const falcosecurity::table_entry &e) {
 				int64_t fd;
 				m_fd_field_fd.read_value(tr, e, fd);
-				m_fuse_context.filler(m_fuse_context.buf,
-				                      std::to_string(fd).c_str(),
-				                      NULL,
-				                      0,
-				                      static_cast<enum fuse_fill_dir_flags>(0));
+				m_context.filler(m_context.buf,
+				                 std::to_string(fd).c_str(),
+				                 NULL,
+				                 0,
+				                 static_cast<enum fuse_fill_dir_flags>(0));
 				return true;
 			});
 		}
@@ -140,7 +131,7 @@ void my_plugin::parse_entry_async_event(const falcosecurity::parse_event_input &
 			});
 
 			cgroup_pathname = "0::" + cgroup_pathname + '\n';
-			memcpy(m_fuse_context.buf, cgroup_pathname.c_str(), cgroup_pathname.length() + 1);
+			memcpy(m_context.buf, cgroup_pathname.c_str(), cgroup_pathname.length() + 1);
 		}
 
 	} catch(std::exception &e) {
@@ -149,25 +140,19 @@ void my_plugin::parse_entry_async_event(const falcosecurity::parse_event_input &
 }
 
 void my_plugin::parse_diff_async_event(const falcosecurity::parse_event_input &in) {
-	std::unordered_map<std::string, proc_entry> tt_entries;
-	std::unordered_map<std::string, proc_entry> proc_entries;
-
 	auto &tr = in.get_table_reader();
 	m_threads_table.iterate_entries(tr, [&](const falcosecurity::table_entry &e) {
 		int64_t tid;
-		// Comm entry
-		proc_entry tt_comm(proc_entry::from_thread_table(m_threads_field_comm,
-		                                                 tr,
-		                                                 e,
-		                                                 tid,
-		                                                 proc_entry::proc_file::comm));
-		proc_entry proc_comm(proc_entry::from_proc_fs(tt_comm.path));
-		tt_entries.insert({tt_comm.path, tt_comm});
+		m_threads_field_tid.read_value(tr, e, tid);
+		proc_entry sinsp_comm(proc_entry::from_thread_table(m_threads_field_comm,
+		                                                    tr,
+		                                                    e,
+		                                                    tid,
+		                                                    proc_entry::proc_file::comm));
+		m_context.sinsp_entries.insert({sinsp_comm.path, sinsp_comm});
+		proc_entry proc_comm(proc_entry::from_proc_fs(sinsp_comm.path));
 		if(!proc_comm.path.empty()) {
-			proc_entries.insert({proc_comm.path, proc_comm});
-		}
-		if(tt_comm != proc_comm) {
-			SPDLOG_INFO("Comm diff: {} != {}", tt_comm.to_string(), proc_comm.to_string());
+			m_context.proc_entries.insert({proc_comm.path, proc_comm});
 		}
 		return true;
 	});
@@ -186,9 +171,6 @@ bool my_plugin::parse_async_event(const falcosecurity::parse_event_input &in) {
 		// generated by our plugin.
 		// This is not an error, it could happen when we have more than one
 		// async plugin loaded.
-		std::unique_lock l(m_fuse_context.m_mu);
-		m_fuse_context.done = true;
-		m_fuse_context.m_cv.notify_all();
 		return true;
 	}
 
@@ -202,17 +184,15 @@ bool my_plugin::parse_async_event(const falcosecurity::parse_event_input &in) {
 		parse_entry_async_event(in);
 	}
 	if(is_diff) {
-		// We are interested in parsing the diff event.
 		parse_diff_async_event(in);
 	}
-
 	if(is_fd_root) {
 		parse_fd_root_async_event(in);
 	}
 
-	std::unique_lock l(m_fuse_context.m_mu);
-	m_fuse_context.done = true;
-	m_fuse_context.m_cv.notify_all();
+	std::unique_lock l(m_context.m_mu);
+	m_context.done = true;
+	m_context.m_cv.notify_all();
 	return true;
 }
 
