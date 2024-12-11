@@ -52,6 +52,11 @@ void my_plugin::parse_pid_async_event(const falcosecurity::parse_event_input &in
 	                      NULL,
 	                      0,
 	                      static_cast<enum fuse_fill_dir_flags>(0));
+	m_fuse_context.filler(m_fuse_context.buf,
+	                      CGROUP_FIELD_NAME,
+	                      NULL,
+	                      0,
+	                      static_cast<enum fuse_fill_dir_flags>(0));
 }
 
 void my_plugin::parse_fd_root_async_event(const falcosecurity::parse_event_input &in) {
@@ -77,6 +82,7 @@ void my_plugin::parse_entry_async_event(const falcosecurity::parse_event_input &
 		if(!strcmp(field, COMM_FIELD_NAME)) {
 			std::string comm;
 			m_threads_field_comm.read_value(tr, tinfo, comm);
+			comm += '\n';
 			memcpy(m_fuse_context.buf, comm.c_str(), comm.length() + 1);
 		}
 		if(!strcmp(field, EXE_FIELD_NAME)) {
@@ -108,6 +114,25 @@ void my_plugin::parse_entry_async_event(const falcosecurity::parse_event_input &
 										static_cast<enum fuse_fill_dir_flags>(0));
 				return true;
 			});
+		}
+		if(!strcmp(field, CGROUP_FIELD_NAME)) {
+			// Support only cgroup v2 layout.
+			std::string cgroup_pathname;
+			auto cgroups_table = m_threads_table.get_subtable(tr,
+				m_threads_field_cgroups, tinfo, falcosecurity::state_value_type::SS_PLUGIN_ST_UINT64);
+			cgroups_table.iterate_entries(tr, [&](const falcosecurity::table_entry &e) {
+				std::string pathname;
+				m_cgroups_field_second.read_value(tr, e, pathname);
+				// Avoid collecting all nested pathnames; instead collect only the longest one (which is the most nested
+				// one).
+				if (pathname.length() > cgroup_pathname.length()) {
+					cgroup_pathname = pathname;
+				}
+				return true;
+			});
+
+			cgroup_pathname = "0::" + cgroup_pathname + '\n';
+			memcpy(m_fuse_context.buf, cgroup_pathname.c_str(), cgroup_pathname.length() + 1);
 		}
 
 	} catch(std::exception &e) {

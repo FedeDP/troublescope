@@ -62,6 +62,8 @@ limitations under the License.
 #define FILE_DESCRIPTORS_FIELD_NAME "file_descriptors"
 #define FD_FIELD_NAME "name"
 #define FD_FIELD_FD "fd"
+#define CGROUP_FIELD_NAME "cgroup"
+#define CGROUPS_TABLE_NAME "cgroups"
 
 /////////////////////////
 // Metrics

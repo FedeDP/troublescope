@@ -122,7 +122,14 @@ bool my_plugin::init(falcosecurity::init_input &in) {
 		                                     m_threads_field_file_descriptors,
 		                                     FD_FIELD_FD,
 		                                     st::SS_PLUGIN_ST_INT64);
-	} catch(falcosecurity::plugin_exception e) {
+		// get the 'cgroups' field accessor from the thread table
+		m_threads_field_cgroups = m_threads_table.get_field(
+				t.fields(), CGROUPS_TABLE_NAME, st::SS_PLUGIN_ST_TABLE);
+		// get the 'second' field accessor from the cgroups table
+		m_cgroups_field_second = t.get_subtable_field(
+				m_threads_table, m_threads_field_cgroups, "second",
+				st::SS_PLUGIN_ST_STRING);
+	} catch(falcosecurity::plugin_exception const& e) {
 		m_lasterr = std::string("Failed to get a field from the table: ") + e.what();
 		SPDLOG_CRITICAL(m_lasterr);
 		return false;
