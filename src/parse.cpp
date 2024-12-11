@@ -42,7 +42,7 @@ void my_plugin::parse_pid_async_event(const falcosecurity::parse_event_input &in
 	                      0,
 	                      static_cast<enum fuse_fill_dir_flags>(0));
 	m_fuse_context.filler(m_fuse_context.buf,
-	                      EXE_PATH_FIELD_NAME,
+	                      EXE_PATH_FILENAME,
 	                      NULL,
 	                      0,
 	                      static_cast<enum fuse_fill_dir_flags>(0));
