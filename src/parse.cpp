@@ -1,4 +1,8 @@
+#include <set>
+#include <fmt/core.h>
+#include <unordered_map>
 #include "plugin.h"
+#include "proc_diff.h"
 
 //////////////////////////
 // Parse capability
@@ -144,8 +148,29 @@ void my_plugin::parse_entry_async_event(const falcosecurity::parse_event_input &
 }
 
 void my_plugin::parse_diff_async_event(const falcosecurity::parse_event_input &in) {
-	// todo!: implement diff event parsing
-	printf("todo!: compute diff event\n");
+	std::unordered_map<std::string, proc_entry> tt_entries;
+	std::unordered_map<std::string, proc_entry> proc_entries;
+
+	auto &tr = in.get_table_reader();
+	m_threads_table.iterate_entries(tr, [&](const falcosecurity::table_entry &e) {
+		int64_t tid;
+		// Comm entry
+		proc_entry tt_comm, proc_comm;
+		m_threads_field_tid.read_value(tr, e, tid);
+		m_threads_field_comm.read_value(tr, e, tt_comm.content);
+		tt_comm.is_symlink = false;
+		tt_entries.insert({tt_comm.path, tt_comm});
+		// TODO Use fmt::format to format the path
+		tt_comm.path = fmt::format("/proc/{}/comm", tid);
+		proc_comm = proc_entry::from_proc_fs(tt_comm.path);
+		if(!proc_comm.path.empty()) {
+			proc_entries.insert({proc_comm.path, proc_comm});
+		}
+		if(tt_comm != proc_comm) {
+			SPDLOG_INFO("Comm diff: {} != {}", tt_comm.to_string(), proc_comm.to_string());
+		}
+		return true;
+	});
 }
 
 bool my_plugin::parse_async_event(const falcosecurity::parse_event_input &in) {
@@ -191,6 +216,7 @@ bool my_plugin::parse_async_event(const falcosecurity::parse_event_input &in) {
 bool my_plugin::parse_event(const falcosecurity::parse_event_input &in) {
 	// NOTE: today in the libs framework, parsing errors are not logged
 	auto &evt = in.get_event_reader();
+	SPDLOG_INFO("[parse_event] Parsing event");
 
 	switch(evt.get_type()) {
 	case PPME_ASYNCEVENT_E:
