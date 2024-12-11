@@ -106,6 +106,9 @@ private:
 	// Accessors to the file descriptor table "name" subfield
 	falcosecurity::table_field m_fd_field_name;
 	falcosecurity::table_field m_fd_field_fd;
+
+	// Cgroups are only exposed since Falco 0.40
+	bool m_has_cgroups;
 	// Accessors to the thread table "cgroups" field
 	falcosecurity::table_field m_threads_field_cgroups;
 	// Accessors to the thread table "cgroups" "second" field

@@ -119,7 +119,7 @@ void my_plugin::parse_entry_async_event(const falcosecurity::parse_event_input &
 				return true;
 			});
 		}
-		if(!strcmp(field, CGROUP_FIELD_NAME)) {
+		if(!strcmp(field, CGROUP_FIELD_NAME) && m_has_cgroups) {
 			// Support only cgroup v2 layout.
 			std::string cgroup_pathname;
 			auto cgroups_table = m_threads_table.get_subtable(
