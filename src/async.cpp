@@ -47,8 +47,8 @@ static int fuse_getattr(const char *path, struct stat *stbuf, struct fuse_file_i
 	}
 
 	int pid;
-	char p[32];
-	int ret = sscanf(path, "/%d/%s", &pid, p);
+	char p[32] = {};
+	int ret = sscanf(path, "/%d/%31s", &pid, p);
 	if(ret == 1) {
 		// we only matched "/1000"
 		stbuf->st_mode = S_IFDIR | 0755;
@@ -125,8 +125,8 @@ static int _get_entry_value(const char *path, char *buf, size_t size) {
 	memset(buf, 0, size);
 	ctx->buf = buf;
 	int pid = 0;
-	char entry[32];
-	sscanf(path, "/%d/%s", &pid, entry);
+	char entry[32] = {};
+	sscanf(path, "/%d/%31s", &pid, entry);
 	generate_async_event(ctx->async_event_handler, ASYNC_EVENT_ENTRY_NAME, pid, entry);
 	ctx->m_cv.wait(l, [ctx] { return ctx->done; });
 	return strlen(buf) + 1;
