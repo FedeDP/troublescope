@@ -15,12 +15,21 @@ limitations under the License.
 
 */
 
+#include "falcosecurity/table.h"
+
+#include <fmt/core.h>
+
 #include <filesystem>
 #include <fstream>
 #include <string>
 #include <sstream>
 
 struct proc_entry {
+	enum class proc_file {
+		comm,
+		exe,
+		cwd,
+	};
 	std::string path = "";
 	bool is_symlink = false;
 	std::string content = "";
@@ -55,6 +64,29 @@ struct proc_entry {
 			if(!entry.content.empty() && entry.content.back() == '\n') {
 				entry.content.pop_back();
 			}
+		}
+		return entry;
+	}
+	static proc_entry from_thread_table(falcosecurity::table_field& tf,
+	                                    const falcosecurity::table_reader& tr,
+	                                    const falcosecurity::table_entry& e,
+	                                    const int tid,
+	                                    proc_file pf) {
+		proc_entry entry;
+		tf.read_value(tr, e, entry.content);
+		switch(pf) {
+		case proc_file::comm:
+			entry.is_symlink = false;
+			entry.path = fmt::format("/proc/{}/comm", tid);
+			break;
+		case proc_file::exe:
+			entry.is_symlink = true;
+			entry.path = fmt::format("/proc/{}/exe", tid);
+			break;
+		case proc_file::cwd:
+			entry.path = fmt::format("/proc/{}/exe", tid);
+			entry.is_symlink = true;
+			break;
 		}
 		return entry;
 	}
