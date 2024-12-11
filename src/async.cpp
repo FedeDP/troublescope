@@ -1,11 +1,11 @@
 #include "plugin.h"
 #include <fcntl.h>
 #include <sys/eventfd.h>
+#include <sys/timerfd.h>
 #include <sys/poll.h>
 #include <filesystem>
 
-#define POLL_FD_FUSE 0
-#define POLL_FD_EVENTFD 1
+enum poll_fds { POLL_FD_FUSE = 0, POLL_FD_EVENTFD = 1, POLL_FD_TIMERFD = 2, POLL_FD_SIZE = 3 };
 
 //////////////////////////
 // Async capability
@@ -160,11 +160,13 @@ static constexpr struct fuse_operations ops = {
 };
 
 void my_plugin::async_thread_loop(std::unique_ptr<falcosecurity::async_event_handler> h) noexcept {
-	struct pollfd fds[2];
+	struct pollfd fds[POLL_FD_SIZE];
 	fds[POLL_FD_FUSE].fd = m_fuse_fd;
 	fds[POLL_FD_FUSE].events = POLLIN;
 	fds[POLL_FD_EVENTFD].fd = m_event_fd;
 	fds[POLL_FD_EVENTFD].events = POLLIN;
+	fds[POLL_FD_TIMERFD].fd = m_timer_fd;
+	fds[POLL_FD_TIMERFD].events = POLLIN;
 
 	while(true) {
 		auto ret = poll(fds, std::size(fds), -1);
@@ -183,9 +185,21 @@ void my_plugin::async_thread_loop(std::unique_ptr<falcosecurity::async_event_han
 			}
 			// Process eventfd exit request
 			if(fds[POLL_FD_EVENTFD].revents & POLLIN) {
+				// consume
 				uint64_t tt;
 				eventfd_read(m_event_fd, &tt);
 				goto exit;
+			}
+			// Process timerfd events
+			if(fds[POLL_FD_TIMERFD].revents & POLLIN) {
+				// consume
+				uint64_t tt;
+				if(const auto res = read(m_timer_fd, &tt, sizeof(uint64_t)); res >= 0) {
+					std::unique_lock<std::mutex> l(m_fuse_context.m_mu);
+					// -1 should be a valid tid for async events
+					generate_async_event(h, ASYNC_EVENT_DIFF_NAME, -1, "root");
+					m_fuse_context.m_cv.wait(l, [&] { return m_fuse_context.done; });
+				}
 			}
 			break;
 		}
@@ -231,6 +245,10 @@ bool my_plugin::start_async_events(std::shared_ptr<falcosecurity::async_event_ha
 		return false;
 	}
 	m_event_fd = eventfd(0, 0);
+	// Start the timerfd
+	m_timer_fd = timerfd_create(CLOCK_MONOTONIC, 0);
+	struct itimerspec spec = {{m_cfg.real_proc_scan_period, 0}, {m_cfg.real_proc_scan_period, 0}};
+	timerfd_settime(m_timer_fd, 0, &spec, NULL);
 
 	m_async_thread = std::thread(&my_plugin::async_thread_loop, this, std::move(f->new_handler()));
 
@@ -243,6 +261,7 @@ bool my_plugin::start_async_events(std::shared_ptr<falcosecurity::async_event_ha
 bool my_plugin::stop_async_events() noexcept {
 	eventfd_write(m_event_fd, 1);
 	m_async_thread.join();
+	close(m_timer_fd);
 	close(m_event_fd);
 	close(m_fuse_fd);
 
