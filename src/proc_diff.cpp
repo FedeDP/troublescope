@@ -34,6 +34,7 @@ proc_entry proc_entry::from_thread_table(falcosecurity::table_field& tf,
                                          const int tid,
                                          proc_file pf) {
 	proc_entry entry;
+	entry.tid = tid;
 	tf.read_value(tr, e, entry.content);
 	switch(pf) {
 	case proc_file::comm:
