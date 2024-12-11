@@ -51,17 +51,17 @@ bool my_plugin::parse_async_event(const falcosecurity::parse_event_input &in) {
 
 	if(is_pid) {
 		m_fuse_context.filler(m_fuse_context.buf,
-		                      "comm",
+		                      COMM_FIELD_NAME,
 		                      NULL,
 		                      0,
 		                      static_cast<enum fuse_fill_dir_flags>(0));
 		m_fuse_context.filler(m_fuse_context.buf,
-		                      "exe",
+		                      EXE_FIELD_NAME,
 		                      NULL,
 		                      0,
 		                      static_cast<enum fuse_fill_dir_flags>(0));
 		m_fuse_context.filler(m_fuse_context.buf,
-		                      "cwd",
+		                      CWD_FIELD_NAME,
 		                      NULL,
 		                      0,
 		                      static_cast<enum fuse_fill_dir_flags>(0));
@@ -73,17 +73,17 @@ bool my_plugin::parse_async_event(const falcosecurity::parse_event_input &in) {
 		auto tid = evt.get_tid();
 		try {
 			auto tinfo = m_threads_table.get_entry(tr, (int64_t)tid);
-			if(!strcmp(field, "comm")) {
+			if(!strcmp(field, COMM_FIELD_NAME)) {
 				std::string comm = "";
 				m_threads_field_comm.read_value(tr, tinfo, comm);
 				memcpy(m_fuse_context.buf, comm.c_str(), comm.length() + 1);
 			}
-			if(!strcmp(field, "exe")) {
+			if(!strcmp(field, EXE_FIELD_NAME)) {
 				std::string exe = "";
 				m_threads_field_exe.read_value(tr, tinfo, exe);
 				memcpy(m_fuse_context.buf, exe.c_str(), exe.length() + 1);
 			}
-			if(!strcmp(field, "cwd")) {
+			if(!strcmp(field, CWD_FIELD_NAME)) {
 				std::string cwd = "";
 				m_threads_field_cwd.read_value(tr, tinfo, cwd);
 				if(cwd.empty()) {
