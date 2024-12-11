@@ -42,7 +42,6 @@ static int fuse_getattr(const char *path, struct stat *stbuf, struct fuse_file_i
 	stbuf->st_mtime = time(NULL);
 	if(strcmp(path, "/") == 0) {  // root dir of fuse fs
 		stbuf->st_mode = S_IFDIR | 0755;
-		stbuf->st_nlink = 0;  // TODO correct value
 		return 0;
 	}
 
@@ -52,7 +51,6 @@ static int fuse_getattr(const char *path, struct stat *stbuf, struct fuse_file_i
 	if(ret == 1) {
 		// we only matched "/1000"
 		stbuf->st_mode = S_IFDIR | 0755;
-		stbuf->st_nlink = 0;  // TODO correct value
 		return 0;
 	}
 	if(ret == 2) {
@@ -207,7 +205,7 @@ void my_plugin::async_thread_loop(std::unique_ptr<falcosecurity::async_event_han
 	}
 
 exit:
-	SPDLOG_INFO("Async thread terminated");
+	SPDLOG_DEBUG("Async thread terminated");
 }
 
 // We need this API to start the async thread when the
@@ -269,7 +267,7 @@ bool my_plugin::stop_async_events() noexcept {
 	fuse_unmount(m_fuse_handler);
 	fuse_destroy(m_fuse_handler);
 	fuse_opt_free_args(&m_fuse_args);
-	rmdir(m_cfg.fs_root.c_str());
+	std::filesystem::remove(m_cfg.fs_root.c_str());
 	SPDLOG_DEBUG("joined the async thread");
 	return true;
 }
