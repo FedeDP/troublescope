@@ -72,9 +72,15 @@ public:
 	struct _fuse_context m_fuse_context;
 
 private:
+	void parse_root_async_event(const falcosecurity::parse_event_input &in);
+	void parse_pid_async_event(const falcosecurity::parse_event_input &in);
+	void parse_entry_async_event(const falcosecurity::parse_event_input &in);
+	void parse_diff_async_event(const falcosecurity::parse_event_input &in);
+
 	// Async thread - fuseFS stuff
 	std::thread m_async_thread;
 	int m_event_fd = -1;
+	int m_timer_fd = -1;
 	int m_fuse_fd = -1;
 	struct fuse_buf m_fuse_buf;
 	struct fuse *m_fuse_handler;
