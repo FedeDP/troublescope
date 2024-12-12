@@ -149,10 +149,10 @@ void my_plugin::parse_diff_async_event(const falcosecurity::parse_event_input &i
 		                                                    e,
 		                                                    tid,
 		                                                    proc_entry::proc_file::comm));
-		m_context.sinsp_entries.insert({sinsp_comm.tid, {sinsp_comm}});
+		m_context.sinsp_entries.insert({sinsp_comm.tid, {{sinsp_comm.path, sinsp_comm}}});
 		proc_entry proc_comm(proc_entry::from_proc_fs(sinsp_comm, m_cfg.host_root));
 		if(!proc_comm.path.empty()) {
-			m_context.proc_entries.insert({proc_comm.tid, {proc_comm}});
+			m_context.proc_entries.insert({proc_comm.tid, {{sinsp_comm.path, proc_comm}}});
 		}
 		return true;
 	});

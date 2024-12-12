@@ -244,11 +244,12 @@ void my_plugin::async_thread_loop(std::unique_ptr<falcosecurity::async_event_han
 					size_t diffs = 0;
 					SPDLOG_DEBUG("proc_entries size: {}", m_context.proc_entries.size());
 					for(const auto &e : m_context.sinsp_entries) {
-						const auto sinsp_e = e.second;
+						const auto sinsp_tid = e.second;
 						if(m_context.proc_entries.count(e.first) > 0) {
-							const auto &proc_e = m_context.proc_entries.at(e.first);
-							for(const auto &sinsp_e : sinsp_e) {
-								for(const auto &proc_e : proc_e) {
+							const auto &proc_tid = m_context.proc_entries.at(e.first);
+							for(const auto &[path, sinsp_e] : sinsp_tid) {
+								if(proc_tid.count(path) > 0) {
+									const auto &proc_e = proc_tid.at(path);
 									if(sinsp_e != proc_e) {
 										diffs++;
 										auto &j_entry = j_diff[std::to_string(sinsp_e.tid)];
@@ -260,8 +261,12 @@ void my_plugin::async_thread_loop(std::unique_ptr<falcosecurity::async_event_han
 
 										j_entry.push_back(d);
 									}
+								} else {
+									// TODO: sinsp entry not found in /proc
 								}
 							}
+						} else {
+							// TODO: sinsp TID not found in /proc
 						}
 					}
 					if(diffs > 0) {
