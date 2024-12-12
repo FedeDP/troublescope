@@ -30,8 +30,8 @@ struct plugin_context {
 	std::mutex m_mu;
 	fuse_fill_dir_t filler;
 	void *buf;
-	std::unordered_map<std::string, proc_entry> sinsp_entries;
-	std::unordered_map<std::string, proc_entry> proc_entries;
+	std::unordered_map<int, std::unordered_map<std::string, proc_entry>> sinsp_entries;
+	std::unordered_map<int, std::unordered_map<std::string, proc_entry>> proc_entries;
 };
 
 class my_plugin {
