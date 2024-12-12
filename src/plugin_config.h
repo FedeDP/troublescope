@@ -7,6 +7,7 @@ struct PluginConfig {
 	std::string verbosity;
 	int real_proc_scan_period;  // seconds
 	std::string fs_root;        // root of fuseFS
+	std::string host_root;
 
 	PluginConfig() {
 		real_proc_scan_period = 30;
