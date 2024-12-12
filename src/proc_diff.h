@@ -45,10 +45,11 @@ struct proc_entry {
 	}
 
 	bool operator==(const proc_entry& other) const {
-		return path == other.path && is_symlink == other.is_symlink && content == other.content;
+		return path == other.path && is_symlink == other.is_symlink && content == other.content &&
+		       tid == other.tid;
 	}
 	bool operator!=(const proc_entry& other) const { return !(*this == other); }
-	static proc_entry from_proc_fs(const std::string& path);
+	static proc_entry from_proc_fs(const proc_entry& entry, std::string_view prefix = "");
 	static proc_entry from_thread_table(falcosecurity::table_field& tf,
 	                                    const falcosecurity::table_reader& tr,
 	                                    const falcosecurity::table_entry& e,

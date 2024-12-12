@@ -242,20 +242,29 @@ void my_plugin::async_thread_loop(std::unique_ptr<falcosecurity::async_event_han
 					nlohmann::json j;
 					auto &j_diff = j["diff"];
 					size_t diffs = 0;
+					SPDLOG_INFO("proc_entries size: {}", m_context.proc_entries.size());
 					for(const auto &e : m_context.sinsp_entries) {
 						const auto sinsp_e = e.second;
 						if(m_context.proc_entries.count(e.first) > 0) {
 							const auto &proc_e = m_context.proc_entries.at(e.first);
-							if(sinsp_e != proc_e) {
-								diffs++;
-								auto &j_entry = j_diff[std::to_string(sinsp_e.tid)];
+							for(const auto &sinsp_e : sinsp_e) {
+								for(const auto &proc_e : proc_e) {
+									SPDLOG_INFO("sinsp_e: {}", sinsp_e.to_string());
+									SPDLOG_INFO("proc_e: {}", proc_e.to_string());
+									if(sinsp_e != proc_e) {
+										SPDLOG_INFO("sinsp_e: {}", sinsp_e.to_string());
+										SPDLOG_INFO("proc_e: {}", proc_e.to_string());
+										diffs++;
+										auto &j_entry = j_diff[std::to_string(sinsp_e.tid)];
 
-								nlohmann::json d;
-								d["field"] = sinsp_e.proc_file_str();
-								d["sinsp"] = sinsp_e.content;
-								d["proc"] = proc_e.content;
+										nlohmann::json d;
+										d["field"] = sinsp_e.path;
+										d["sinsp"] = sinsp_e.content;
+										d["proc"] = proc_e.content;
 
-								j_entry.push_back(d);
+										j_entry.push_back(d);
+									}
+								}
 							}
 						}
 					}
