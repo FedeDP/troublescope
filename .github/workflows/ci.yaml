@@ -10,21 +10,19 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
-    container: debian:bullseye
-
+    runs-on: ubuntu-20.04
     steps:
       - name: Install dependencies
         run: |
-          apt update
-          apt install -y libfuse3-dev git make build-essential curl
+          sudo apt update
+          sudo apt install -y libfuse3-dev
 
       - name: Install updated cmake version ⛓️
         run: |
           curl -L -o /tmp/cmake.tar.gz https://github.com/Kitware/CMake/releases/download/v3.22.5/cmake-3.22.5-linux-$(uname -m).tar.gz
           gzip -d /tmp/cmake.tar.gz
           tar -xpf /tmp/cmake.tar --directory=/tmp
-          cp -R /tmp/cmake-3.22.5-linux-$(uname -m)/* /usr
+          sudo cp -R /tmp/cmake-3.22.5-linux-$(uname -m)/* /usr
           rm -rf /tmp/cmake-3.22.5-linux-$(uname -m)    
 
       - name: Checkout repository
@@ -33,12 +31,8 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Safe directory
-        run: git config --global --add safe.directory $GITHUB_WORKSPACE
-
       - name: Build Troublescope binary
-        run: |
-          make
+        run: make
 
       - name: Archive build artifacts
         if: success()
