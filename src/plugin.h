@@ -82,6 +82,12 @@ private:
 	void parse_diff_async_event(const falcosecurity::parse_event_input &in);
 	void parse_fd_root_async_event(const falcosecurity::parse_event_input &in);
 
+	void add_table_entries(falcosecurity::table_field &tf,
+	                       const falcosecurity::table_reader &tr,
+	                       const falcosecurity::table_entry &e,
+	                       int tid,
+	                       proc_entry::proc_file pf);
+
 	// Async thread - fuseFS stuff
 	std::thread m_async_thread;
 	int m_event_fd = -1;
