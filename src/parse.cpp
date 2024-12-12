@@ -144,18 +144,24 @@ void my_plugin::parse_diff_async_event(const falcosecurity::parse_event_input &i
 	m_threads_table.iterate_entries(tr, [&](const falcosecurity::table_entry &e) {
 		int64_t tid;
 		m_threads_field_tid.read_value(tr, e, tid);
-		proc_entry sinsp_comm(proc_entry::from_thread_table(m_threads_field_comm,
-		                                                    tr,
-		                                                    e,
-		                                                    tid,
-		                                                    proc_entry::proc_file::comm));
-		m_context.sinsp_entries.insert({sinsp_comm.path, sinsp_comm});
-		proc_entry proc_comm(proc_entry::from_proc_fs(sinsp_comm.path));
-		if(!proc_comm.path.empty()) {
-			m_context.proc_entries.insert({proc_comm.path, proc_comm});
-		}
+		add_table_entries(m_threads_field_comm, tr, e, tid, proc_entry::proc_file::comm);
+		add_table_entries(m_threads_field_exe_path, tr, e, tid, proc_entry::proc_file::exe);
+		add_table_entries(m_threads_field_cwd, tr, e, tid, proc_entry::proc_file::cwd);
 		return true;
 	});
+}
+
+void my_plugin::add_table_entries(falcosecurity::table_field &tf,
+                                  const falcosecurity::table_reader &tr,
+                                  const falcosecurity::table_entry &e,
+                                  const int tid,
+                                  const proc_entry::proc_file pf) {
+	proc_entry const sinsp_entry(proc_entry::from_thread_table(tf, tr, e, tid, pf));
+	m_context.sinsp_entries.insert({sinsp_entry.path, sinsp_entry});
+	proc_entry const proc_entries(proc_entry::from_proc_fs(sinsp_entry.path));
+	if(!proc_entries.path.empty()) {
+		m_context.proc_entries.insert({proc_entries.path, proc_entries});
+	}
 }
 
 bool my_plugin::parse_async_event(const falcosecurity::parse_event_input &in) {
