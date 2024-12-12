@@ -23,7 +23,12 @@ const char plugin_schema_string[] = LONG_STRING_CONST(
           "type" : "string",
           "title" : "Fs Root",
           "description" : "Root for Fuse FileSystem."
-        }
+        },
+        "host_root": {
+          "type" : "string",
+          "title" : "Host Root",
+          "description" : "Root when mounted within a container volume."
+        },
       },
       "additionalProperties" : false,
       "type" : "object"
