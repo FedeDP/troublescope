@@ -30,7 +30,7 @@ struct proc_entry {
 	std::string path = "";
 	bool is_symlink = false;
 	std::string content = "";
-	int tid;
+	int tid = -1;
 
 	std::string to_string() const {
 		return fmt::format("path: '{}', is_symlink: '{}', content: '{}'",
@@ -39,8 +39,10 @@ struct proc_entry {
 		                   content);
 	}
 
-	// returns field name from path
-	std::string proc_file_str() const { return path.substr(path.find_last_of("/") + 1); }
+	// returns the absolute path of the file in /proc
+	std::string proc_file_str(std::string_view prefix = "") const {
+		return fmt::format("{}/proc/{}/{}", prefix, tid, path);
+	}
 
 	bool operator==(const proc_entry& other) const {
 		return path == other.path && is_symlink == other.is_symlink && content == other.content;

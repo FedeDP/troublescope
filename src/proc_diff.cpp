@@ -39,14 +39,14 @@ proc_entry proc_entry::from_thread_table(falcosecurity::table_field& tf,
 	switch(pf) {
 	case proc_file::comm:
 		entry.is_symlink = false;
-		entry.path = fmt::format("/proc/{}/comm", tid);
+		entry.path = fmt::format("comm", tid);
 		break;
 	case proc_file::exe:
 		entry.is_symlink = true;
-		entry.path = fmt::format("/proc/{}/exe", tid);
+		entry.path = fmt::format("exe", tid);
 		break;
 	case proc_file::cwd:
-		entry.path = fmt::format("/proc/{}/exe", tid);
+		entry.path = fmt::format("cwd", tid);
 		entry.is_symlink = true;
 		break;
 	}
