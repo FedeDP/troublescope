@@ -122,25 +122,37 @@ bool my_plugin::init(falcosecurity::init_input &in) {
 		                                     m_threads_field_file_descriptors,
 		                                     FD_FIELD_FD,
 		                                     st::SS_PLUGIN_ST_INT64);
+		try {
+			// get the 'cgroups' field accessor from the thread table
+			m_threads_field_cgroups = m_threads_table.get_field(t.fields(),
+			                                                    CGROUPS_TABLE_NAME,
+			                                                    st::SS_PLUGIN_ST_TABLE);
+			// get the 'second' field accessor from the cgroups table
+			m_cgroups_field_second = t.get_subtable_field(m_threads_table,
+			                                              m_threads_field_cgroups,
+			                                              "second",
+			                                              st::SS_PLUGIN_ST_STRING);
+			m_has_cgroups = true;
+		} catch(...) {
+			m_has_cgroups = false;
+		}
+
+		m_threads_field_exe =
+		        m_threads_table.get_field(t.fields(), EXE_FIELD_NAME, st::SS_PLUGIN_ST_STRING);
+		// get the 'args' field accessor from the thread table
+		m_threads_field_args =
+		        m_threads_table.get_field(t.fields(), ARGS_FIELD_NAME, st::SS_PLUGIN_ST_TABLE);
+		// get the 'second' field accessor from the args table
+		m_args_field_value = t.get_subtable_field(m_threads_table,
+		                                          m_threads_field_args,
+		                                          "value",
+		                                          st::SS_PLUGIN_ST_STRING);
 	} catch(falcosecurity::plugin_exception const &e) {
 		m_lasterr = std::string("Failed to get a field from the table: ") + e.what();
 		SPDLOG_CRITICAL(m_lasterr);
 		return false;
 	}
 
-	try {
-		// get the 'cgroups' field accessor from the thread table
-		m_threads_field_cgroups =
-		        m_threads_table.get_field(t.fields(), CGROUPS_TABLE_NAME, st::SS_PLUGIN_ST_TABLE);
-		// get the 'second' field accessor from the cgroups table
-		m_cgroups_field_second = t.get_subtable_field(m_threads_table,
-		                                              m_threads_field_cgroups,
-		                                              "second",
-		                                              st::SS_PLUGIN_ST_STRING);
-		m_has_cgroups = true;
-	} catch(...) {
-		m_has_cgroups = false;
-	}
 	return true;
 }
 

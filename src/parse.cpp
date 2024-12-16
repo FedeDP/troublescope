@@ -1,4 +1,4 @@
-#include <set>
+#include <sstream>
 #include <unordered_map>
 #include "falcosecurity/async_event_handler.h"
 #include "falcosecurity/table.h"
@@ -54,6 +54,11 @@ void my_plugin::parse_pid_async_event(const falcosecurity::parse_event_input &in
 	m_context.filler(m_context.buf, "fdinfo", NULL, 0, static_cast<enum fuse_fill_dir_flags>(0));
 	m_context.filler(m_context.buf,
 	                 CGROUP_FIELD_NAME,
+	                 NULL,
+	                 0,
+	                 static_cast<enum fuse_fill_dir_flags>(0));
+	m_context.filler(m_context.buf,
+	                 CMDLINE_FILENAME,
 	                 NULL,
 	                 0,
 	                 static_cast<enum fuse_fill_dir_flags>(0));
@@ -132,6 +137,30 @@ void my_plugin::parse_entry_async_event(const falcosecurity::parse_event_input &
 
 			cgroup_pathname = "0::" + cgroup_pathname + '\n';
 			memcpy(m_context.buf, cgroup_pathname.c_str(), cgroup_pathname.length() + 1);
+		}
+		if(!strcmp(field, CMDLINE_FILENAME)) {
+			std::ostringstream oss;
+
+			// Output argv[0]
+			std::string exe;
+			m_threads_field_exe.read_value(tr, tinfo, exe);
+			oss << exe;
+
+			// Output argv[1:]
+			auto args_table = m_threads_table.get_subtable(
+			        tr,
+			        m_threads_field_args,
+			        tinfo,
+			        falcosecurity::state_value_type::SS_PLUGIN_ST_UINT64);
+			args_table.iterate_entries(tr, [&](const falcosecurity::table_entry &e) {
+				std::string arg;
+				m_args_field_value.read_value(tr, e, arg);
+				oss << ' ' << arg;
+				return true;
+			});
+			oss << '\n';
+			auto cmdline = oss.str();
+			memcpy(m_context.buf, cmdline.c_str(), cmdline.length() + 1);
 		}
 
 	} catch(std::exception &e) {
